@@ -2,8 +2,13 @@ rootProject.name = "YanNetwork"
 include("network-ui")
 
 pluginManagement {
-    plugins {
-        val kotlinVersion: String by settings
-        kotlin("jvm") version kotlinVersion
+    pluginManagement {
+        repositories {
+            gradlePluginPortal()
+            maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        }
     }
+//    plugins {
+//        kotlin("jvm")
+//    }
 }
