@@ -8,6 +8,8 @@ import com.github.yandroidua.ui.utils.StartEndOffset
 
 data class Line(
         val startEndOffset: StartEndOffset,
+        val firstStationId: Int,
+        val secondStationId: Int,
         val color: Color,
         val state: State,
         val isInMovement: Boolean = false

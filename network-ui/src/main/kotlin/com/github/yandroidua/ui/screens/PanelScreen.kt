@@ -16,6 +16,7 @@ import androidx.compose.ui.gesture.tapGestureFilter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.imageFromResource
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.ui.elements.*
@@ -24,6 +25,7 @@ import com.github.yandroidua.ui.utils.StartEndOffset
 data class PageContext(
         val elementsState: MutableState<List<Element>>,
         var selectedElement: Element? = null,
+        var workstationCounter: Int = 0,
         var lineCreationLastTouchOffset: Offset? = null,
         var selectedElementType: ElementType? = null /* represent type clicked from bottom control panel bar */
 )
@@ -34,7 +36,7 @@ private fun getElementOrNull(elements: List<Element>, offset: Offset): Element? 
 }
 
 @Composable
-fun PanelScreen(modifier: Modifier = Modifier, onDetailInfoClicked: (Element) -> Unit) = Column {
+fun PanelScreen(modifier: Modifier = Modifier, onDetailInfoClicked: (Element) -> Unit) = Column(modifier = modifier) {
     val pageContext = PageContext(
             elementsState = remember { mutableStateOf(emptyList()) }
     )
@@ -43,55 +45,46 @@ fun PanelScreen(modifier: Modifier = Modifier, onDetailInfoClicked: (Element) ->
 }
 
 @Composable
-private fun ControlPanel(context: PageContext) = Row(modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight(align = Alignment.Bottom)
-        .padding(10.dp)
-        .border(width = 2.dp, color = Color.Black, shape = RectangleShape)
+private fun ControlPanel(context: PageContext) = Row(
+        modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(align = Alignment.Bottom)
+                .background(Color.White)
+                .border(width = 2.dp, color = Color.Black, shape = RectangleShape)
+                .padding(10.dp)
 ) {
-    Image(
-            asset = imageFromResource("workstation.png"),
+    Image(asset = imageFromResource("workstation.png"),
             modifier = Modifier
                     .width(32.dp)
                     .height(32.dp)
                     .clickable { context.changeSelectedType(ElementType.WORKSTATION) }
     )
     Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-    Image(
-            asset = imageFromResource("line.jpg"),
+    Image(asset = imageFromResource("line.jpg"),
             modifier = Modifier
                     .width(32.dp)
                     .height(32.dp)
                     .clickable { context.changeSelectedType(ElementType.LINE) }
     )
     Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-    Button(onClick = {}) {
-        Text(text = "Undo")
-    }
+    Button(onClick = context::undo) { Text(text = "Undo") }
+    Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+    Button(onClick = context::onCancel) { Text(text = "Cancel") }
+    Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+    Button(onClick = context::clear) { Text(text = "Clear") }
 }
 
 @Composable
-private fun ColumnScope.DrawArea(pageContext: PageContext, onDetailInfoClicked: (Element) -> Unit) = Canvas(modifier = Modifier
-        .fillMaxSize()
-        .background(Color.Red)
-        .weight(1f)
-        .pointerMoveFilter(onMove = {
-            if (pageContext.selectedElementType != ElementType.LINE) return@pointerMoveFilter false
-            pageContext.elementsState.value = pageContext.elementsState.value.toMutableList().apply {
-                val creatingLineIndex = indexOfFirst { it is Line && it.state == Line.State.CREATING }
-                if (creatingLineIndex == -1) return@pointerMoveFilter false
-                set(creatingLineIndex, (get(creatingLineIndex) as Line).copy(
-                        startEndOffset =  StartEndOffset(
-                                startPoint =(get(creatingLineIndex) as Line).startEndOffset.startPoint,
-                                endPoint = it
-                        ),
-                        isInMovement = true
-                ))
-            }
-            println("Move $it")
-            true
-        }, onEnter =  { true })
-        .tapGestureFilter { pageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
+private fun ColumnScope.DrawArea(
+        pageContext: PageContext,
+        onDetailInfoClicked: (Element) -> Unit
+) = Canvas(
+        modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .weight(1f)
+                .pointerMoveFilter(onMove = { pageContext.onMouseMoved(it) }, onEnter =  { true })
+                .tapGestureFilter { pageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
 ) {
     pageContext.elementsState.value.forEach {
         it.onDraw(this)
@@ -102,7 +95,10 @@ private fun PageContext.changeSelectedType(type: ElementType) {
     selectedElementType = type
 }
 
-private fun PageContext.onCanvasTyped(position: Offset, onDetailInfoClicked: (Element) -> Unit) {
+private fun PageContext.onCanvasTyped(
+        position: Offset,
+        onDetailInfoClicked: (Element
+        ) -> Unit) {
     val currentSelectedElementType = selectedElementType ?: return // wtf, nothing selected PANIC!
     if (checkInfoClick(this, currentSelectedElementType, position, onDetailInfoClicked)) return //info displayed
     when (currentSelectedElementType) {
@@ -111,7 +107,66 @@ private fun PageContext.onCanvasTyped(position: Offset, onDetailInfoClicked: (El
     }
 }
 
-private fun checkInfoClick(context: PageContext, type: ElementType, position: Offset, onDetailInfoClicked: (Element) -> Unit): Boolean {
+private fun PageContext.onMouseMoved(position: Offset): Boolean {
+    if (selectedElementType != ElementType.LINE) return false
+    elementsState.value = elementsState.value.toMutableList().apply {
+        val creatingLineIndex = indexOfFirst { it is Line && it.state == Line.State.CREATING }
+        if (creatingLineIndex == -1) return false
+        set(creatingLineIndex, (get(creatingLineIndex) as Line).copy(
+                startEndOffset =  StartEndOffset(
+                        startPoint =(get(creatingLineIndex) as Line).startEndOffset.startPoint,
+                        endPoint = position
+                ),
+                isInMovement = true
+        ))
+    }
+    return true
+}
+
+private fun PageContext.onCancel() {
+    val indexOfActiveLine = elementsState.value.indexOfFirst { it is Line && it.state == Line.State.CREATING }
+    if (indexOfActiveLine != -1) {
+        elementsState.value = elementsState.value.toMutableList().apply { removeAt(indexOfActiveLine) }
+    }
+    selectedElementType = null
+    lineCreationLastTouchOffset = null
+}
+
+private fun PageContext.clear() {
+    selectedElementType = null
+    workstationCounter = 0
+    lineCreationLastTouchOffset = null
+    selectedElement = null
+    elementsState.value = emptyList()
+}
+
+private fun PageContext.undo() {
+    val lastElement = elementsState.value.lastOrNull()
+    if (lastElement == null) {
+        selectedElementType = null
+        workstationCounter = 0
+        lineCreationLastTouchOffset = null
+        selectedElement = null
+        return
+    }
+    elementsState.value = when (lastElement.type) {
+        ElementType.WORKSTATION -> {
+            workstationCounter--
+            elementsState.value.toMutableList().apply { removeLast() }
+        }
+        ElementType.LINE -> {
+            lineCreationLastTouchOffset = null
+            elementsState.value.toMutableList().apply { removeLast() }
+        }
+    }
+}
+
+private fun checkInfoClick(
+        context: PageContext,
+        type: ElementType,
+        position: Offset,
+        onDetailInfoClicked: (Element) -> Unit
+): Boolean {
     val elementOnPosition = getElementOrNull(context.elementsState.value, position) ?: return false
     return when (elementOnPosition.type) {
         ElementType.WORKSTATION -> if(type != ElementType.LINE) {
@@ -122,6 +177,7 @@ private fun checkInfoClick(context: PageContext, type: ElementType, position: Of
     }
 }
 
+//todo fix detection
 private fun onLineInfo(line: Line, onDetailInfoClicked: (Element) -> Unit) {
     println("Line info")
     onDetailInfoClicked(line)
@@ -140,8 +196,9 @@ private fun onWorkstationCreate(context: PageContext, offset: Offset) {
     if (item?.type == ElementType.WORKSTATION) return // cannot add workstation, because another workstation is near
 
     context.elementsState.value = context.elementsState.value.toMutableList().apply {
-        add(Workstation(offset))
+        add(Workstation(context.workstationCounter, offset))
     }
+    context.workstationCounter++
 
 }
 
@@ -158,7 +215,9 @@ private fun onLineCreate(context: PageContext, offset: Offset) {
                             endPoint = offset
                     ),
                     color = Color.Black,
-                    state = Line.State.CREATING
+                    state = Line.State.CREATING,
+                    firstStationId = (typedElement as Workstation).id,
+                    secondStationId = -1
             ))
         }
         return
@@ -174,6 +233,7 @@ private fun onLineCreate(context: PageContext, offset: Offset) {
                         startPoint = context.lineCreationLastTouchOffset!!,
                         endPoint = typedElement.center
                 ),
+                secondStationId = (typedElement as Workstation).id,
                 isInMovement = false
         ))
     }
