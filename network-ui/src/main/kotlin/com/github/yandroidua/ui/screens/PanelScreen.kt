@@ -17,7 +17,6 @@ import androidx.compose.ui.gesture.tapGestureFilter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.imageFromResource
-import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.ui.MAIN_WINDOW_TITLE
@@ -25,7 +24,7 @@ import com.github.yandroidua.ui.WIDTH
 import com.github.yandroidua.ui.elements.*
 import com.github.yandroidua.ui.utils.StartEndOffset
 
-data class PageContext(
+data class PanelPageContext(
         val elementsState: MutableState<List<Element>>,
         val selectedElementState: MutableState<Element?>,
         var workstationCounter: Int = 0,
@@ -44,11 +43,7 @@ private fun onDetailsShow(show: Boolean) {
 }
 
 @Composable
-fun PanelScreen(modifier: Modifier = Modifier) = Row(modifier) {
-    val pageContext = PageContext(
-            elementsState = remember { mutableStateOf(emptyList()) },
-            selectedElementState = remember { mutableStateOf(null) }
-    )
+fun PanelScreen(modifier: Modifier = Modifier, pageContext: PanelPageContext) = Row(modifier) {
     Column(modifier = Modifier.weight(weight = 1f)) {
         DrawArea(pageContext) { onDetailsShow(show = pageContext.selectedElementState.value != null) }
         ControlPanel(pageContext)
@@ -68,7 +63,7 @@ fun PanelScreen(modifier: Modifier = Modifier) = Row(modifier) {
 }
 
 @Composable
-private fun ControlPanel(context: PageContext) = Row(
+private fun ControlPanel(contextPanel: PanelPageContext) = Row(
         modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(align = Alignment.Bottom)
@@ -80,45 +75,45 @@ private fun ControlPanel(context: PageContext) = Row(
             modifier = Modifier
                     .width(32.dp)
                     .height(32.dp)
-                    .clickable { context.changeSelectedType(ElementType.WORKSTATION) }
+                    .clickable { contextPanel.changeSelectedType(ElementType.WORKSTATION) }
     )
     Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
     Image(asset = imageFromResource("line.jpg"),
             modifier = Modifier
                     .width(32.dp)
                     .height(32.dp)
-                    .clickable { context.changeSelectedType(ElementType.LINE) }
+                    .clickable { contextPanel.changeSelectedType(ElementType.LINE) }
     )
     Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-    Button(onClick = context::undo) { Text(text = "Undo") }
+    Button(onClick = contextPanel::undo) { Text(text = "Undo") }
     Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-    Button(onClick = context::onCancel) { Text(text = "Cancel") }
+    Button(onClick = contextPanel::onCancel) { Text(text = "Cancel") }
     Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-    Button(onClick = context::clear) { Text(text = "Clear") }
+    Button(onClick = contextPanel::clear) { Text(text = "Clear") }
 }
 
 @Composable
 private fun ColumnScope.DrawArea(
-        pageContext: PageContext,
+        panelPageContext: PanelPageContext,
         onDetailInfoClicked: (Element) -> Unit
 ) = Canvas(
         modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
                 .weight(1f)
-                .pointerMoveFilter(onMove = { pageContext.onMouseMoved(it) }, onEnter =  { true })
-                .tapGestureFilter { pageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
+                .pointerMoveFilter(onMove = { panelPageContext.onMouseMoved(it) }, onEnter =  { true })
+                .tapGestureFilter { panelPageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
 ) {
-    pageContext.elementsState.value.forEach {
+    panelPageContext.elementsState.value.forEach {
         it.onDraw(this)
     }
 }
 
-private fun PageContext.changeSelectedType(type: ElementType) {
+private fun PanelPageContext.changeSelectedType(type: ElementType) {
     selectedElementType = type
 }
 
-private fun PageContext.onCanvasTyped(
+private fun PanelPageContext.onCanvasTyped(
         position: Offset,
         onDetailInfoClicked: (Element) -> Unit
 ) {
@@ -133,7 +128,7 @@ private fun PageContext.onCanvasTyped(
     }
 }
 
-private fun PageContext.onMouseMoved(position: Offset): Boolean {
+private fun PanelPageContext.onMouseMoved(position: Offset): Boolean {
     if (selectedElementType != ElementType.LINE) return false
     elementsState.value = elementsState.value.toMutableList().apply {
         val creatingLineIndex = indexOfFirst { it is Line && it.state == Line.State.CREATING }
@@ -149,7 +144,7 @@ private fun PageContext.onMouseMoved(position: Offset): Boolean {
     return true
 }
 
-private fun PageContext.onCancel() {
+private fun PanelPageContext.onCancel() {
     val indexOfActiveLine = elementsState.value.indexOfFirst { it is Line && it.state == Line.State.CREATING }
     if (indexOfActiveLine != -1) {
         elementsState.value = elementsState.value.toMutableList().apply { removeAt(indexOfActiveLine) }
@@ -160,7 +155,7 @@ private fun PageContext.onCancel() {
     onDetailsShow(false)
 }
 
-private fun PageContext.clear() {
+private fun PanelPageContext.clear() {
     selectedElementType = null
     workstationCounter = 0
     lineCreationLastTouchOffset = null
@@ -169,7 +164,7 @@ private fun PageContext.clear() {
     onDetailsShow(false)
 }
 
-private fun PageContext.undo() {
+private fun PanelPageContext.undo() {
     val lastElement = elementsState.value.lastOrNull()
     if (lastElement == null) {
         selectedElementType = null
@@ -191,20 +186,20 @@ private fun PageContext.undo() {
 }
 
 private fun checkInfoClick(
-        context: PageContext,
+        contextPanel: PanelPageContext,
         type: ElementType?,
         position: Offset,
         onDetailInfoClicked: (Element) -> Unit
 ): Boolean {
-    val elementOnPosition = getElementOrNull(context.elementsState.value, position) ?: return false
+    val elementOnPosition = getElementOrNull(contextPanel.elementsState.value, position) ?: return false
     return when (elementOnPosition.type) {
         ElementType.WORKSTATION -> if(type != ElementType.LINE) {
-            context.selectedElementState.value = elementOnPosition
+            contextPanel.selectedElementState.value = elementOnPosition
             onWorkstationInfo(elementOnPosition as Workstation, onDetailInfoClicked)
             true
         } else false
         ElementType.LINE -> {
-            context.selectedElementState.value = elementOnPosition
+            contextPanel.selectedElementState.value = elementOnPosition
             onLineInfo(elementOnPosition as Line, onDetailInfoClicked)
             true
         }
@@ -221,27 +216,27 @@ private fun onWorkstationInfo(workstation: Workstation, onDetailInfoClicked: (El
     onDetailInfoClicked(workstation)
 }
 
-private fun onWorkstationCreate(context: PageContext, offset: Offset) {
+private fun onWorkstationCreate(contextPanel: PanelPageContext, offset: Offset) {
     // reset line creation status
-    context.lineCreationLastTouchOffset = null
+    contextPanel.lineCreationLastTouchOffset = null
 
-    val item = getElementOrNull(context.elementsState.value, offset)
+    val item = getElementOrNull(contextPanel.elementsState.value, offset)
     if (item?.type == ElementType.WORKSTATION) return // cannot add workstation, because another workstation is near
 
-    context.elementsState.value = context.elementsState.value.toMutableList().apply {
-        add(Workstation(context.workstationCounter, offset))
+    contextPanel.elementsState.value = contextPanel.elementsState.value.toMutableList().apply {
+        add(Workstation(contextPanel.workstationCounter, offset))
     }
-    context.workstationCounter++
+    contextPanel.workstationCounter++
 
 }
 
-private fun onLineCreate(context: PageContext, offset: Offset) {
-    val typedElement = getElementOrNull(context.elementsState.value, offset) ?: return
+private fun onLineCreate(contextPanel: PanelPageContext, offset: Offset) {
+    val typedElement = getElementOrNull(contextPanel.elementsState.value, offset) ?: return
     if (typedElement.type != ElementType.WORKSTATION) return
-    if (context.lineCreationLastTouchOffset == null) {
+    if (contextPanel.lineCreationLastTouchOffset == null) {
         // this is first click, line must be created after second click on workstation
-        context.lineCreationLastTouchOffset = typedElement.center
-        context.elementsState.value = context.elementsState.value.toMutableList().apply {
+        contextPanel.lineCreationLastTouchOffset = typedElement.center
+        contextPanel.elementsState.value = contextPanel.elementsState.value.toMutableList().apply {
             add(Line(
                     startEndOffset = StartEndOffset(
                             startPoint = typedElement.center,
@@ -256,19 +251,19 @@ private fun onLineCreate(context: PageContext, offset: Offset) {
         return
     }
     // on second click of another workstation
-    if (typedElement.isInOffset(context.lineCreationLastTouchOffset!!)) return
-    context.elementsState.value = context.elementsState.value.toMutableList().apply {
+    if (typedElement.isInOffset(contextPanel.lineCreationLastTouchOffset!!)) return
+    contextPanel.elementsState.value = contextPanel.elementsState.value.toMutableList().apply {
         val creatingLineIndex = indexOfFirst { it is Line && it.state == Line.State.CREATING }
         if (creatingLineIndex == -1) return@apply
         set(creatingLineIndex, (get(creatingLineIndex) as Line).copy(
                 state = Line.State.CREATED,
                 startEndOffset =  StartEndOffset(
-                        startPoint = context.lineCreationLastTouchOffset!!,
+                        startPoint = contextPanel.lineCreationLastTouchOffset!!,
                         endPoint = typedElement.center
                 ),
                 secondStationId = (typedElement as Workstation).id,
                 isInMovement = false
         ))
     }
-    context.lineCreationLastTouchOffset = null //clear line creation state
+    contextPanel.lineCreationLastTouchOffset = null //clear line creation state
 }

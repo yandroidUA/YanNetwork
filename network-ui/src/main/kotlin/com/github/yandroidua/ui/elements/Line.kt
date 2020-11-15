@@ -37,7 +37,6 @@ data class Line(
                 y = (startEndOffset.startPoint.y + startEndOffset.endPoint.y) / 2f
         )
     }
-
     private val rect: Rect by lazy {
         val leftX = minOf(startEndOffset.startPoint.x, startEndOffset.endPoint.x)
         val topY = minOf(startEndOffset.startPoint.y, startEndOffset.endPoint.y)
@@ -45,6 +44,17 @@ data class Line(
         val bottomY = maxOf(startEndOffset.startPoint.y, startEndOffset.endPoint.y)
         Rect(topLeft = Offset(leftX, topY), bottomRight = Offset(rightX, bottomY))
     }
+    private val paint: Paint by lazy {
+        Paint().apply {
+            isAntiAlias = true
+            color = Color.Blue
+        }
+    }
+    private val skiaFont: Font by lazy {
+        Font(Typeface.makeDefault(), 20f)
+    }
+
+    override val type: ElementType = ElementType.LINE
 
     override fun isInOffset(offset: Offset): Boolean {
         val xA = startEndOffset.startPoint.x
@@ -57,14 +67,8 @@ data class Line(
                 && rect.contains(offset)
     }
 
-    override val type: ElementType = ElementType.LINE
-
     override fun onDraw(drawScope: DrawScope) {
         drawScope.drawLine(color, startEndOffset.startPoint, startEndOffset.endPoint)
-        val paint = Paint()
-        paint.isAntiAlias = true
-        paint.color = Color.Blue
-        val skiaFont = Font(Typeface.makeDefault(), 20f)
         drawScope.drawIntoCanvas { d ->
             (d as DesktopCanvas).skija.drawString("$weight", center.x, center.y, skiaFont, paint.asFrameworkPaint())
         }

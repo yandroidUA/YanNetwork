@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.github.yandroidua.ui.screens.PanelPageContext
 import com.github.yandroidua.ui.screens.PanelScreen
 import com.github.yandroidua.ui.screens.SettingsScreen
 
@@ -30,6 +31,12 @@ enum class TabType {
 const val MAIN_WINDOW_TITLE = "Andy Yan, KV71"
 const val WIDTH = 800
 const val HEIGHT = 600
+
+data class AppState(
+        var panelScreenContextPanel: PanelPageContext? = null
+)
+
+private val applicationState = AppState()
 
 fun main() = Window(title = MAIN_WINDOW_TITLE, size = IntSize(WIDTH, HEIGHT)) {
     val selectedTabState = remember { mutableStateOf(TabType.SETTINGS) }
@@ -61,7 +68,10 @@ fun main() = Window(title = MAIN_WINDOW_TITLE, size = IntSize(WIDTH, HEIGHT)) {
         }
         when (selectedTabState.value) {
             TabType.SETTINGS -> SettingsScreen()
-            TabType.PANEL -> PanelScreen()
+            TabType.PANEL -> PanelScreen(pageContext = applicationState.panelScreenContextPanel ?: PanelPageContext(
+                    elementsState = remember { mutableStateOf(emptyList()) },
+                    selectedElementState = remember { mutableStateOf(null) }
+            ).also { applicationState.panelScreenContextPanel = it })
             TabType.RESULTS -> Text(text = "RESULTS")
             TabType.DETAILS -> Text(text = "DETAILS")
         }
