@@ -24,8 +24,7 @@ import com.github.yandroidua.ui.screens.SettingsScreen
 enum class TabType {
     SETTINGS,
     PANEL,
-    RESULTS,
-    DETAILS
+    RESULTS
 }
 
 const val MAIN_WINDOW_TITLE = "Andy Yan, KV71"
@@ -51,19 +50,19 @@ fun main() = Window(title = MAIN_WINDOW_TITLE, size = IntSize(WIDTH, HEIGHT)) {
                     selected = selectedTabState.value == TabType.SETTINGS,
                     onClick = { selectedTabState.value = TabType.SETTINGS },
                     text = "Settings",
-                    modifier = Modifier.weight(1/4f)
+                    modifier = Modifier.weight(1/3f)
             )
             PageTab(
                     selected = selectedTabState.value == TabType.PANEL,
                     onClick = { selectedTabState.value = TabType.PANEL },
                     text = "PANEL",
-                    modifier = Modifier.weight(1/4f)
+                    modifier = Modifier.weight(1/3f)
             )
             PageTab(
                     selected = selectedTabState.value == TabType.RESULTS,
                     onClick = { selectedTabState.value = TabType.RESULTS },
                     text = "RESULTS",
-                    modifier = Modifier.weight(1/4f)
+                    modifier = Modifier.weight(1/3f)
             )
         }
         when (selectedTabState.value) {
@@ -73,7 +72,6 @@ fun main() = Window(title = MAIN_WINDOW_TITLE, size = IntSize(WIDTH, HEIGHT)) {
                     selectedElementState = remember { mutableStateOf(null) }
             ).also { applicationState.panelScreenContextPanel = it })
             TabType.RESULTS -> Text(text = "RESULTS")
-            TabType.DETAILS -> Text(text = "DETAILS")
         }
     }
 }
