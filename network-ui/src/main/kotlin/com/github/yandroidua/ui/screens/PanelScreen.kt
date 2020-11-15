@@ -1,6 +1,7 @@
 package com.github.yandroidua.ui.screens
 
 
+import androidx.compose.desktop.AppManager
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -19,12 +20,14 @@ import androidx.compose.ui.graphics.imageFromResource
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.unit.dp
+import com.github.yandroidua.ui.MAIN_WINDOW_TITLE
+import com.github.yandroidua.ui.WIDTH
 import com.github.yandroidua.ui.elements.*
 import com.github.yandroidua.ui.utils.StartEndOffset
 
 data class PageContext(
         val elementsState: MutableState<List<Element>>,
-        var selectedElement: Element? = null,
+        val selectedElementState: MutableState<Element?>,
         var workstationCounter: Int = 0,
         var lineCreationLastTouchOffset: Offset? = null,
         var selectedElementType: ElementType? = null /* represent type clicked from bottom control panel bar */
@@ -35,13 +38,33 @@ private fun getElementOrNull(elements: List<Element>, offset: Offset): Element? 
             ?: elements.find { it.isInOffset(offset) }
 }
 
+private fun onDetailsShow(show: Boolean) {
+    val window = AppManager.windows.find { it.title == MAIN_WINDOW_TITLE } ?: return
+    window.setSize(width = if (show) WIDTH + 200 else WIDTH, height = window.height)
+}
+
 @Composable
-fun PanelScreen(modifier: Modifier = Modifier, onDetailInfoClicked: (Element) -> Unit) = Column(modifier = modifier) {
+fun PanelScreen(modifier: Modifier = Modifier) = Row(modifier) {
     val pageContext = PageContext(
-            elementsState = remember { mutableStateOf(emptyList()) }
+            elementsState = remember { mutableStateOf(emptyList()) },
+            selectedElementState = remember { mutableStateOf(null) }
     )
-    DrawArea(pageContext, onDetailInfoClicked)
-    ControlPanel(pageContext)
+    Column(modifier = Modifier.weight(weight = 1f)) {
+        DrawArea(pageContext) { onDetailsShow(show = pageContext.selectedElementState.value != null) }
+        ControlPanel(pageContext)
+    }
+    if (pageContext.selectedElementState.value != null) {
+        DetailsScreen(
+                modifier = Modifier
+                        .width(width = 200.dp)
+                        .background(Color.Green)
+                        .fillMaxHeight(),
+                element = pageContext.selectedElementState.value!!
+        ) {
+            //todo find and save this element
+            pageContext.selectedElementState.value = it
+        }
+    }
 }
 
 @Composable
@@ -97,10 +120,13 @@ private fun PageContext.changeSelectedType(type: ElementType) {
 
 private fun PageContext.onCanvasTyped(
         position: Offset,
-        onDetailInfoClicked: (Element
-        ) -> Unit) {
-    val currentSelectedElementType = selectedElementType ?: return // wtf, nothing selected PANIC!
+        onDetailInfoClicked: (Element) -> Unit
+) {
+    selectedElementState.value = null
+    onDetailsShow(false)
+    val currentSelectedElementType = selectedElementType
     if (checkInfoClick(this, currentSelectedElementType, position, onDetailInfoClicked)) return //info displayed
+    if (currentSelectedElementType == null) return  // wtf, nothing selected PANIC!
     when (currentSelectedElementType) {
         ElementType.WORKSTATION -> onWorkstationCreate(this, position)
         ElementType.LINE -> onLineCreate(this, position)
@@ -130,14 +156,17 @@ private fun PageContext.onCancel() {
     }
     selectedElementType = null
     lineCreationLastTouchOffset = null
+    selectedElementState.value = null
+    onDetailsShow(false)
 }
 
 private fun PageContext.clear() {
     selectedElementType = null
     workstationCounter = 0
     lineCreationLastTouchOffset = null
-    selectedElement = null
+    selectedElementState.value = null
     elementsState.value = emptyList()
+    onDetailsShow(false)
 }
 
 private fun PageContext.undo() {
@@ -146,7 +175,7 @@ private fun PageContext.undo() {
         selectedElementType = null
         workstationCounter = 0
         lineCreationLastTouchOffset = null
-        selectedElement = null
+        selectedElementState.value = null
         return
     }
     elementsState.value = when (lastElement.type) {
@@ -163,21 +192,25 @@ private fun PageContext.undo() {
 
 private fun checkInfoClick(
         context: PageContext,
-        type: ElementType,
+        type: ElementType?,
         position: Offset,
         onDetailInfoClicked: (Element) -> Unit
 ): Boolean {
     val elementOnPosition = getElementOrNull(context.elementsState.value, position) ?: return false
     return when (elementOnPosition.type) {
         ElementType.WORKSTATION -> if(type != ElementType.LINE) {
+            context.selectedElementState.value = elementOnPosition
             onWorkstationInfo(elementOnPosition as Workstation, onDetailInfoClicked)
             true
         } else false
-        ElementType.LINE -> { onLineInfo(elementOnPosition as Line, onDetailInfoClicked); true }
+        ElementType.LINE -> {
+            context.selectedElementState.value = elementOnPosition
+            onLineInfo(elementOnPosition as Line, onDetailInfoClicked)
+            true
+        }
     }
 }
 
-//todo fix detection
 private fun onLineInfo(line: Line, onDetailInfoClicked: (Element) -> Unit) {
     println("Line info")
     onDetailInfoClicked(line)

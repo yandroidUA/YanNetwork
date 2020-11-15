@@ -1,6 +1,5 @@
 package com.github.yandroidua.ui
 
-import androidx.compose.desktop.AppManager
 import androidx.compose.desktop.Window
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.github.yandroidua.ui.elements.Element
 import com.github.yandroidua.ui.screens.PanelScreen
 import com.github.yandroidua.ui.screens.SettingsScreen
 
@@ -30,10 +28,11 @@ enum class TabType {
 }
 
 const val MAIN_WINDOW_TITLE = "Andy Yan, KV71"
+const val WIDTH = 800
+const val HEIGHT = 600
 
-fun main() = Window(title = MAIN_WINDOW_TITLE, size = IntSize(800, 600)) {
+fun main() = Window(title = MAIN_WINDOW_TITLE, size = IntSize(WIDTH, HEIGHT)) {
     val selectedTabState = remember { mutableStateOf(TabType.SETTINGS) }
-    val details = remember { mutableStateOf<Element?>(null) }
 
     Column(modifier = Modifier.fillMaxWidth().background(color = Color.Magenta)) {
         Row(modifier = Modifier
@@ -59,22 +58,10 @@ fun main() = Window(title = MAIN_WINDOW_TITLE, size = IntSize(800, 600)) {
                     text = "RESULTS",
                     modifier = Modifier.weight(1/4f)
             )
-            if (details.value != null) {
-                PageTab(
-                        selected = selectedTabState.value == TabType.DETAILS,
-                        onClick = { selectedTabState.value = TabType.DETAILS },
-                        text = "DETAILS",
-                        modifier = Modifier.weight(1 / 4f)
-                )
-            }
         }
         when (selectedTabState.value) {
             TabType.SETTINGS -> SettingsScreen()
-            TabType.PANEL -> PanelScreen {
-                val window = AppManager.windows.find { it.title == MAIN_WINDOW_TITLE } ?: return@PanelScreen
-                window.setSize(width = 1000, height = window.height)
-                details.value = it
-            }
+            TabType.PANEL -> PanelScreen()
             TabType.RESULTS -> Text(text = "RESULTS")
             TabType.DETAILS -> Text(text = "DETAILS")
         }

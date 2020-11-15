@@ -3,8 +3,14 @@ package com.github.yandroidua.ui.elements
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.DesktopCanvas
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import com.github.yandroidua.ui.utils.StartEndOffset
+import org.jetbrains.skija.Font
+import org.jetbrains.skija.Typeface
+import kotlin.math.abs
 
 data class Line(
         val startEndOffset: StartEndOffset,
@@ -12,8 +18,13 @@ data class Line(
         val secondStationId: Int,
         val color: Color,
         val state: State,
+        val weight: Int = 1,
         val isInMovement: Boolean = false
 ) : Element {
+
+    companion object {
+        private const val LINE_THRESHOLD = 4
+    }
 
     enum class State {
         CREATED,
@@ -27,9 +38,12 @@ data class Line(
         )
     }
 
-    //todo fix to determine which of offsets will be start and which will be end
     private val rect: Rect by lazy {
-        Rect(topLeft = startEndOffset.startPoint, bottomRight = startEndOffset.endPoint)
+        val leftX = minOf(startEndOffset.startPoint.x, startEndOffset.endPoint.x)
+        val topY = minOf(startEndOffset.startPoint.y, startEndOffset.endPoint.y)
+        val rightX = maxOf(startEndOffset.startPoint.x, startEndOffset.endPoint.x)
+        val bottomY = maxOf(startEndOffset.startPoint.y, startEndOffset.endPoint.y)
+        Rect(topLeft = Offset(leftX, topY), bottomRight = Offset(rightX, bottomY))
     }
 
     override fun isInOffset(offset: Offset): Boolean {
@@ -39,14 +53,21 @@ data class Line(
         val yB = startEndOffset.endPoint.y
         val x = offset.x
         val y = offset.y
-        return y == (x * (yB - yA) - xA * yB + xA * yA + yA * xB - yA * xA) / (xB - xA) && rect.contains(offset)
+        return abs(y - (((x * (yB - yA) - xA * yB + xA * yA + yA * xB - yA * xA)) / (xB - xA))) <= LINE_THRESHOLD
+                && rect.contains(offset)
     }
 
     override val type: ElementType = ElementType.LINE
 
     override fun onDraw(drawScope: DrawScope) {
-//        if (state == State.CREATING && !isInMovement) return
         drawScope.drawLine(color, startEndOffset.startPoint, startEndOffset.endPoint)
+        val paint = Paint()
+        paint.isAntiAlias = true
+        paint.color = Color.Blue
+        val skiaFont = Font(Typeface.makeDefault(), 20f)
+        drawScope.drawIntoCanvas { d ->
+            (d as DesktopCanvas).skija.drawString("$weight", center.x, center.y, skiaFont, paint.asFrameworkPaint())
+        }
     }
 
 }

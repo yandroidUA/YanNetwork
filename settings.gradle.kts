@@ -1,5 +1,6 @@
 rootProject.name = "YanNetwork"
 include("network-ui")
+include("network-algorithm")
 
 pluginManagement {
     pluginManagement {
@@ -8,7 +9,4 @@ pluginManagement {
             maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         }
     }
-//    plugins {
-//        kotlin("jvm")
-//    }
 }
