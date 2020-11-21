@@ -11,7 +11,7 @@ class BellmanFordAlgorithm(
         val result = Array(size = k) { Array(size = k - 1) { Int.MAX_VALUE } }
         repeat(times = k) { index ->
             repeat(times = k - 1) { count ->
-                result[index][count] = getConnectionOr(from = from, workstations[index], count)
+                result[index][count] = getConnectionOr(from = from, workstations[index], count + 1)
             }
         }
         println(result)

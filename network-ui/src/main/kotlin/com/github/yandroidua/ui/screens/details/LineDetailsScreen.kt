@@ -22,7 +22,7 @@ private data class Input(
 )
 
 @Composable
-fun LineDetails(modifier: Modifier = Modifier, elementLine: ElementLine) = Column(modifier) {
+fun LineDetails(modifier: Modifier = Modifier, elementLine: ElementLine, saver: (ElementLine) -> Unit) = Column(modifier) {
     val inputState = remember { mutableStateOf(Input(weight = elementLine.weight.toString())) }
     val errorState = remember { mutableStateOf(LineDetailsErrorState()) }
     Column(modifier = Modifier.weight(1f)) {
@@ -48,16 +48,21 @@ fun LineDetails(modifier: Modifier = Modifier, elementLine: ElementLine) = Colum
         }
 
     }
-    Button(onClick = { checkInput(errorState, inputState.value) }, modifier = Modifier.fillMaxWidth()) {
+    Button(onClick = { checkInput(errorState, inputState.value, onValid = { saver(elementLine.copy(weight = it.weight.toInt())) }) }, modifier = Modifier.fillMaxWidth()) {
         Text(text = "Save", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
     }
 
 }
 
-private fun checkInput(errorState: MutableState<LineDetailsErrorState>, input: Input) {
+private fun checkInput(errorState: MutableState<LineDetailsErrorState>, input: Input, onValid: (Input) -> Unit) {
+    var valid = true
     val lineError = checkWeight(input.weight)
+    valid = valid and lineError.isNullOrBlank()
     //todo other checks
     errorState.value = LineDetailsErrorState(weightErrorMessage = lineError)
+    if (valid) {
+        onValid(input)
+    }
 }
 
 private fun checkWeight(weight: String): String? {

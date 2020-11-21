@@ -52,7 +52,7 @@ private fun onDetailsShow(show: Boolean) {
             else
                 if (window.width <= WIDTH + DETAILS_SCREEN_WIDTH)
                     WIDTH
-                else 
+                else
                     window.width,
             height = window.height
     )
@@ -71,9 +71,7 @@ fun PanelScreen(modifier: Modifier = Modifier, pageContext: PanelPageContext) = 
                         .background(Color.Green)
                         .fillMaxHeight(),
                 element = pageContext.selectedElementState.value!!
-        ) {
-            pageContext.selectedElementState.value = it
-        }
+        ) { element -> pageContext.changeElement(element) }
     }
 }
 
@@ -168,6 +166,24 @@ private fun PanelPageContext.onMouseMoved(position: Offset): Boolean {
         ))
     }
     return true
+}
+
+private fun PanelPageContext.changeElement(newElement: Element) {
+    val elementIndex = elementsState.value.indexOfFirst { it.id == newElement.id }
+    if (elementIndex == -1) return
+    elementsState.value = elementsState.value.toMutableList().apply {
+        set(elementIndex, newElement)
+    }
+    if (newElement.type == ElementType.LINE) {
+        elementsState.value = elementsState.value.toMutableList().apply {
+            this.filterIsInstance<ConnectableElement>().forEach { cE ->
+                val lineIndex = cE.lines.indexOfFirst { it.id == newElement.id }
+                if (lineIndex != -1) {
+                    cE.lines[lineIndex] = newElement as ElementLine
+                }
+            }
+        }
+    }
 }
 
 private fun PanelPageContext.calculate() {

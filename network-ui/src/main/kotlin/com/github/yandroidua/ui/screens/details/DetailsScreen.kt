@@ -24,7 +24,7 @@ fun DetailsScreen(modifier: Modifier = Modifier, element: Element, saver: (Eleme
 )) {
     when (element.type) {
         ElementType.WORKSTATION -> WorkstationDetails(elementWorkstation = element as ElementWorkstation)
-        ElementType.LINE -> LineDetails(elementLine = element as ElementLine)
+        ElementType.LINE -> LineDetails(elementLine = element as ElementLine) { saver(it) }
         ElementType.COMMUNICATION_NODE -> CommunicationNodeDetailsScreen(elementCommunicationNode = element as ElementCommunicationNode)
     }
 }
