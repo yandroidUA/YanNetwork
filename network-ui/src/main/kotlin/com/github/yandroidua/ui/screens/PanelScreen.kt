@@ -8,8 +8,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -22,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.github.yandroidua.ui.MAIN_WINDOW_TITLE
 import com.github.yandroidua.ui.WIDTH
 import com.github.yandroidua.ui.elements.*
+import com.github.yandroidua.ui.screens.details.DetailsScreen
 import com.github.yandroidua.ui.utils.StartEndOffset
 
 data class PanelPageContext(
@@ -32,6 +31,8 @@ data class PanelPageContext(
         var selectedElementType: ElementType? = null /* represent type clicked from bottom control panel bar */
 )
 
+private const val DETAILS_SCREEN_WIDTH = 350
+
 private fun getElementOrNull(elements: List<Element>, offset: Offset): Element? {
     return elements.filterIsInstance<ImageControlElement>().find { it.isInOffset(offset) }
             ?: elements.find { it.isInOffset(offset) }
@@ -39,7 +40,7 @@ private fun getElementOrNull(elements: List<Element>, offset: Offset): Element? 
 
 private fun onDetailsShow(show: Boolean) {
     val window = AppManager.windows.find { it.title == MAIN_WINDOW_TITLE } ?: return
-    window.setSize(width = if (show) WIDTH + 200 else WIDTH, height = window.height)
+    window.setSize(width = if (show) WIDTH + DETAILS_SCREEN_WIDTH else WIDTH, height = window.height)
 }
 
 @Composable
@@ -51,12 +52,11 @@ fun PanelScreen(modifier: Modifier = Modifier, pageContext: PanelPageContext) = 
     if (pageContext.selectedElementState.value != null) {
         DetailsScreen(
                 modifier = Modifier
-                        .width(width = 200.dp)
+                        .width(width = DETAILS_SCREEN_WIDTH.dp)
                         .background(Color.Green)
                         .fillMaxHeight(),
                 element = pageContext.selectedElementState.value!!
         ) {
-            //todo find and save this element
             pageContext.selectedElementState.value = it
         }
     }
@@ -71,24 +71,25 @@ private fun ControlPanel(contextPanel: PanelPageContext) = Row(
                 .border(width = 2.dp, color = Color.Black, shape = RectangleShape)
                 .padding(10.dp)
 ) {
-    Image(asset = imageFromResource("workstation.png"),
-            modifier = Modifier
-                    .width(32.dp)
-                    .height(32.dp)
-                    .clickable { contextPanel.changeSelectedType(ElementType.WORKSTATION) }
-    )
-    Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-    Image(asset = imageFromResource("line.jpg"),
-            modifier = Modifier
-                    .width(32.dp)
-                    .height(32.dp)
-                    .clickable { contextPanel.changeSelectedType(ElementType.LINE) }
-    )
-    Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-    Button(onClick = contextPanel::undo) { Text(text = "Undo") }
-    Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-    Button(onClick = contextPanel::onCancel) { Text(text = "Cancel") }
-    Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+    Row(modifier = Modifier.weight(weight = 1f)) {
+        Image(asset = imageFromResource("workstation.png"),
+                modifier = Modifier
+                        .width(32.dp)
+                        .height(32.dp)
+                        .clickable { contextPanel.changeSelectedType(ElementType.WORKSTATION) }
+        )
+        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Image(asset = imageFromResource("line.jpg"),
+                modifier = Modifier
+                        .width(32.dp)
+                        .height(32.dp)
+                        .clickable { contextPanel.changeSelectedType(ElementType.LINE) }
+        )
+        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Button(onClick = contextPanel::undo) { Text(text = "Undo") }
+        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Button(onClick = contextPanel::onCancel) { Text(text = "Cancel") }
+    }
     Button(onClick = contextPanel::clear) { Text(text = "Clear") }
 }
 
@@ -129,7 +130,7 @@ private fun PanelPageContext.onCanvasTyped(
 }
 
 private fun PanelPageContext.onMouseMoved(position: Offset): Boolean {
-    if (selectedElementType != ElementType.LINE) return false
+//    if (selectedElementType != ElementType.LINE) return false
     elementsState.value = elementsState.value.toMutableList().apply {
         val creatingLineIndex = indexOfFirst { it is Line && it.state == Line.State.CREATING }
         if (creatingLineIndex == -1) return false

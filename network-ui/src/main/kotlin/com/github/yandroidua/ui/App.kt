@@ -28,8 +28,8 @@ enum class TabType {
 }
 
 const val MAIN_WINDOW_TITLE = "Andy Yan, KV71"
-const val WIDTH = 800
-const val HEIGHT = 600
+const val WIDTH = 900
+const val HEIGHT = 700
 
 data class AppState(
         var panelScreenContextPanel: PanelPageContext? = null
