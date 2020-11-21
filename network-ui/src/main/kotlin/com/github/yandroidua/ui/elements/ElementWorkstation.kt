@@ -6,16 +6,22 @@ import androidx.compose.ui.graphics.DesktopCanvas
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import com.github.yandroidua.ui.elements.base.ConnectableElement
+import com.github.yandroidua.ui.elements.base.ElementType
+import com.github.yandroidua.ui.elements.base.ImageControlElement
 import org.jetbrains.skija.Font
 import org.jetbrains.skija.Typeface
 
-class Workstation(
-        val id: Int,
-        offset: Offset
-) : ImageControlElement(image = "workstation.png", offset) {
+class ElementWorkstation(
+        override val id: Int,
+        offset: Offset,
+        override val lines: MutableList<ElementLine> = mutableListOf()
+) : ImageControlElement(image = "workstation.png", offset), ConnectableElement {
 
     override val height: Int = 32
     override val width: Int = 32
+
+    override val type: ElementType = ElementType.WORKSTATION
 
     private val paint: Paint by lazy {
         Paint().apply {

@@ -1,10 +1,6 @@
 package com.github.yandroidua.ui.screens.details
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -13,10 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.imageFromResource
 import androidx.compose.ui.unit.dp
-import com.github.yandroidua.ui.elements.Line
+import com.github.yandroidua.ui.components.EditText
+import com.github.yandroidua.ui.elements.ElementLine
 
 private data class LineDetailsErrorState(
         val weightErrorMessage: String? = null
@@ -27,8 +22,8 @@ private data class Input(
 )
 
 @Composable
-fun LineDetails(modifier: Modifier = Modifier, line: Line) = Column(modifier) {
-    val inputState = remember { mutableStateOf(Input(weight = line.weight.toString())) }
+fun LineDetails(modifier: Modifier = Modifier, elementLine: ElementLine) = Column(modifier) {
+    val inputState = remember { mutableStateOf(Input(weight = elementLine.weight.toString())) }
     val errorState = remember { mutableStateOf(LineDetailsErrorState()) }
     Column(modifier = Modifier.weight(1f)) {
         Text(
@@ -41,30 +36,15 @@ fun LineDetails(modifier: Modifier = Modifier, line: Line) = Column(modifier) {
         Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(align = Alignment.Top)) {
             Text(text = "Weight", modifier = Modifier.align(alignment = Alignment.CenterVertically))
             Spacer(modifier = Modifier.height(1.dp).width(5.dp))
-            BasicTextField(
+            EditText(
                     value = inputState.value.weight,
                     onValueChange = { weight ->
                         inputState.value = inputState.value.copy(weight = weight)
                         errorState.value = errorState.value.copy(weightErrorMessage = null)
                     },
-                    maxLines = 1,
-                    modifier = Modifier
-                            .border(
-                                    shape = RoundedCornerShape(size = 4.dp),
-                                    color = if (errorState.value.weightErrorMessage.isNullOrBlank()) Color.Black else Color.Red,
-                                    width = 2.dp
-                            )
-                            .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)
+                    error = errorState.value.weightErrorMessage,
+                    maxLines = 1
             )
-            if (!errorState.value.weightErrorMessage.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(1.dp).width(5.dp))
-                Image(asset = imageFromResource("error.png"),
-                        modifier = Modifier
-                                .width(18.dp)
-                                .height(18.dp)
-                                .align(alignment = Alignment.CenterVertically)
-                )
-            }
         }
 
     }
@@ -83,9 +63,8 @@ private fun checkInput(errorState: MutableState<LineDetailsErrorState>, input: I
 private fun checkWeight(weight: String): String? {
     return try {
         val num = weight.toInt()
-        if (num > 0) null else "Wrong number"
+        if (num > 0) null else "Number must be greater than 0"
     } catch (e : NumberFormatException) {
-//        e.printStackTrace()
-        "Wrong number"
+        "Wrong number format"
     }
 }

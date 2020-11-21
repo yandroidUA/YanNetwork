@@ -7,12 +7,15 @@ import androidx.compose.ui.graphics.DesktopCanvas
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import com.github.yandroidua.ui.elements.base.Element
+import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.utils.StartEndOffset
 import org.jetbrains.skija.Font
 import org.jetbrains.skija.Typeface
 import kotlin.math.abs
 
-data class Line(
+data class ElementLine(
+        override val id: Int,
         val startEndOffset: StartEndOffset,
         val firstStationId: Int,
         val secondStationId: Int,
@@ -37,6 +40,9 @@ data class Line(
                 y = (startEndOffset.startPoint.y + startEndOffset.endPoint.y) / 2f
         )
     }
+
+    override val connectable: Boolean = false
+
     private val rect: Rect by lazy {
         val leftX = minOf(startEndOffset.startPoint.x, startEndOffset.endPoint.x)
         val topY = minOf(startEndOffset.startPoint.y, startEndOffset.endPoint.y)

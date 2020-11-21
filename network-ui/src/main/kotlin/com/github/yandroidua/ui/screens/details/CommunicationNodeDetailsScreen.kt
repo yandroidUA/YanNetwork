@@ -7,13 +7,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.ElementWorkstation
 
+
 @Composable
-fun WorkstationDetails(modifier: Modifier = Modifier, elementWorkstation: ElementWorkstation) = Column(modifier) {
+fun CommunicationNodeDetailsScreen(modifier: Modifier = Modifier, elementCommunicationNode: ElementCommunicationNode) = Column(modifier) {
     Column(modifier = Modifier.weight(1f)) {
         Text(
-                text = "This is Workstation#${elementWorkstation.id}",
+                text = "This is ElementCommunicationNode#${elementCommunicationNode.id}",
                 modifier = Modifier
                         .wrapContentWidth(align = Alignment.CenterHorizontally)
                         .align(alignment = Alignment.CenterHorizontally)

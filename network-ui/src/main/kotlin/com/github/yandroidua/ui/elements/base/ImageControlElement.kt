@@ -1,4 +1,4 @@
-package com.github.yandroidua.ui.elements
+package com.github.yandroidua.ui.elements.base
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -17,8 +17,6 @@ abstract class ImageControlElement(
     private val rect: Rect by lazy {
         Rect(topLeft = offset, bottomRight = Offset(x = offset.x + width, y = offset.y + height))
     }
-
-    override val type: ElementType = ElementType.WORKSTATION
 
     override val center: Offset by lazy {
         Offset(x = offset.x + width / 2f, y = offset.y + height / 2f)

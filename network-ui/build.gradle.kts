@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation(project(":network-algorithm"))
     implementation(compose.desktop.currentOs)
 }
 

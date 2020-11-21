@@ -9,10 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
-import com.github.yandroidua.ui.elements.Element
-import com.github.yandroidua.ui.elements.ElementType
-import com.github.yandroidua.ui.elements.Line
-import com.github.yandroidua.ui.elements.Workstation
+import com.github.yandroidua.ui.elements.ElementCommunicationNode
+import com.github.yandroidua.ui.elements.base.Element
+import com.github.yandroidua.ui.elements.base.ElementType
+import com.github.yandroidua.ui.elements.ElementLine
+import com.github.yandroidua.ui.elements.ElementWorkstation
 
 @Composable
 fun DetailsScreen(modifier: Modifier = Modifier, element: Element, saver: (Element) -> Unit) = Column(modifier.then(
@@ -22,8 +23,9 @@ fun DetailsScreen(modifier: Modifier = Modifier, element: Element, saver: (Eleme
                 .padding(10.dp)
 )) {
     when (element.type) {
-        ElementType.WORKSTATION -> WorkstationDetails(workstation = element as Workstation)
-        ElementType.LINE -> LineDetails(line = element as Line)
+        ElementType.WORKSTATION -> WorkstationDetails(elementWorkstation = element as ElementWorkstation)
+        ElementType.LINE -> LineDetails(elementLine = element as ElementLine)
+        ElementType.COMMUNICATION_NODE -> CommunicationNodeDetailsScreen(elementCommunicationNode = element as ElementCommunicationNode)
     }
 }
 
