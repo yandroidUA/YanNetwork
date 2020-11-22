@@ -4,7 +4,6 @@ import com.github.yandroidua.algorithm.Line
 import com.github.yandroidua.algorithm.LineType
 import com.github.yandroidua.algorithm.Workstation
 import com.github.yandroidua.ui.elements.ElementLine
-import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 
 fun ElementLine.mapToAlgorithmEntity(): Line = Line(
@@ -18,5 +17,5 @@ fun ElementLine.mapToAlgorithmEntity(): Line = Line(
 
 fun ConnectableElement.mapToAlgorithmEntity(): Workstation = Workstation(
         number = id,
-        lines = lines.map { it.mapToAlgorithmEntity() }
+        linesId = lineIds
 )

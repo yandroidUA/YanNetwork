@@ -15,7 +15,7 @@ import org.jetbrains.skija.Typeface
 class ElementCommunicationNode(
         override val id: Int,
         offset: Offset,
-        override val lines: MutableList<ElementLine> = mutableListOf()
+        override val lineIds: MutableList<Int> = mutableListOf()
 ) : ImageControlElement(image = "communication_node.png", offset), ConnectableElement {
 
     override val height: Int = 32

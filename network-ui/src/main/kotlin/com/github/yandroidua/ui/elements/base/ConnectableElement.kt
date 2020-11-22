@@ -1,9 +1,7 @@
 package com.github.yandroidua.ui.elements.base
 
-import com.github.yandroidua.ui.elements.ElementLine
-
 interface ConnectableElement : Element {
-    val lines: MutableList<ElementLine>
+    val lineIds: MutableList<Int>
     override val connectable: Boolean
         get() = true
 }

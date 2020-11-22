@@ -1,10 +1,11 @@
 package com.github.yandroidua.algorithm
 
 class BellmanFordAlgorithm(
-        private val workstations: List<Workstation>
+        private val workstations: List<Workstation>,
+        private val lines: List<Line>
 ) {
 
-    fun calculate(from: Workstation): List<List<Int>> {
+    fun calculate(from: Workstation): Array<Array<Int>> {
         // count of stations
         val k = workstations.size
         // allocation [k][k-1] matrix, where k - for stations, and k-1 for path result from
@@ -14,19 +15,19 @@ class BellmanFordAlgorithm(
                 result[index][count] = getConnectionOr(from = from, workstations[index], count + 1)
             }
         }
-        println(result)
-        return emptyList()
+        return result
     }
 
     private fun getConnectionOr(from: Workstation, to: Workstation, count: Int, or: Int = Int.MAX_VALUE): Int {
         if (from.number == to.number) return 0
         if (count <= 0) return or
-        return from.lines
+        return from.linesId
                 .asSequence()
-                .flatMap { line ->
+                .flatMap { lineId ->
+                    val line = lines.find { it.id == lineId } ?: return@flatMap listOf(null)
                     listOf(
-                            workstations.find { it.number == line.station2Number }?.to(line),
-                            workstations.find { it.number == line.station1Number }?.to(line),
+                            workstations[line.station2Number] to line,
+                            workstations[line.station1Number] to line
                     )
                 }
                 .filterNotNull() // remove all failure search

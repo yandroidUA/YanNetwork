@@ -174,23 +174,16 @@ private fun PanelPageContext.changeElement(newElement: Element) {
     elementsState.value = elementsState.value.toMutableList().apply {
         set(elementIndex, newElement)
     }
-    if (newElement.type == ElementType.LINE) {
-        elementsState.value = elementsState.value.toMutableList().apply {
-            this.filterIsInstance<ConnectableElement>().forEach { cE ->
-                val lineIndex = cE.lines.indexOfFirst { it.id == newElement.id }
-                if (lineIndex != -1) {
-                    cE.lines[lineIndex] = newElement as ElementLine
-                }
-            }
-        }
-    }
 }
 
 private fun PanelPageContext.calculate() {
     val workstations = elementsState.value
             .filterIsInstance<ConnectableElement>()
             .map { it.mapToAlgorithmEntity() }
-    val alg = BellmanFordAlgorithm(workstations)
+    val lines = elementsState.value
+            .filterIsInstance<ElementLine>()
+            .map { it.mapToAlgorithmEntity() }
+    val alg = BellmanFordAlgorithm(workstations, lines)
     if (workstations.isEmpty()) return
     alg.calculate(workstations.first())
 }
@@ -233,8 +226,8 @@ private fun PanelPageContext.undo() {
             elementCounter--
             lineCreationLastTouchOffset = null
             val line = lastElement as ElementLine
-            (elementsState.value.find { it.id == line.secondStationId } as? ConnectableElement)?.lines?.removeIf { it.id == line.id }
-            (elementsState.value.find { it.id == line.firstStationId } as? ConnectableElement)?.lines?.removeIf { it.id == line.id }
+            (elementsState.value.find { it.id == line.secondStationId } as? ConnectableElement)?.lineIds?.remove(line.id)
+            (elementsState.value.find { it.id == line.firstStationId } as? ConnectableElement)?.lineIds?.remove(line.id)
             elementsState.value.toMutableList().apply { removeLast() }
         }
         ElementType.COMMUNICATION_NODE -> {
@@ -336,8 +329,8 @@ private fun onLineCreate(contextPanel: PanelPageContext, offset: Offset) {
                 isInMovement = false
         )
         set(creatingLineIndex, newLine)
-        (contextPanel.elementsState.value.find { it.id == newLine.firstStationId } as? ConnectableElement)?.lines?.add(newLine)
-        (contextPanel.elementsState.value.find { it.id == newLine.secondStationId } as? ConnectableElement)?.lines?.add(newLine)
+        (contextPanel.elementsState.value.find { it.id == newLine.firstStationId } as? ConnectableElement)?.lineIds?.add(newLine.id)
+        (contextPanel.elementsState.value.find { it.id == newLine.secondStationId } as? ConnectableElement)?.lineIds?.add(newLine.id)
     }
     contextPanel.lineCreationLastTouchOffset = null //clear line creation state
 }
