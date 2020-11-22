@@ -1,8 +1,8 @@
 import org.jetbrains.compose.compose
 
 plugins {
-    kotlin("jvm") version "1.4.0"
-    id("org.jetbrains.compose") version "0.1.0-m1-build62"
+    kotlin("jvm") version "1.4.20"
+    id("org.jetbrains.compose") version "0.2.0-build128"
     application
 }
 

@@ -8,7 +8,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
-import com.github.yandroidua.ui.elements.ElementWorkstation
 
 
 @Composable
@@ -27,6 +26,8 @@ fun CommunicationNodeDetailsScreen(modifier: Modifier = Modifier, elementCommuni
         Button(onClick = {}) { Text("Test3") }
         Spacer(modifier = Modifier.fillMaxWidth().height(20.dp))
         Button(onClick = {}) { Text("Test4") }
+        Spacer(modifier = Modifier.fillMaxWidth().height(20.dp))
+        Button(onClick = {}) { Text("Test5") }
     }
     Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
         Text(text = "Save", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))

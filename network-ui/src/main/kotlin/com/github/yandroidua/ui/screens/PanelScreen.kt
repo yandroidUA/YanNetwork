@@ -85,21 +85,21 @@ private fun ControlPanel(contextPanel: PanelPageContext) = Row(
                 .padding(10.dp)
 ) {
     Row(modifier = Modifier.weight(weight = 1f)) {
-        Image(asset = imageFromResource("workstation.png"),
+        Image(imageFromResource("workstation.png"),
                 modifier = Modifier
                         .width(32.dp)
                         .height(32.dp)
                         .clickable { contextPanel.changeSelectedType(ElementType.WORKSTATION) }
         )
         Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-        Image(asset = imageFromResource("communication_node.png"),
+        Image(imageFromResource("communication_node.png"),
                 modifier = Modifier
                         .width(32.dp)
                         .height(32.dp)
                         .clickable { contextPanel.changeSelectedType(ElementType.COMMUNICATION_NODE) }
         )
         Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-        Image(asset = imageFromResource("line.jpg"),
+        Image(imageFromResource("line.jpg"),
                 modifier = Modifier
                         .width(32.dp)
                         .height(32.dp)
@@ -177,15 +177,17 @@ private fun PanelPageContext.changeElement(newElement: Element) {
 }
 
 private fun PanelPageContext.calculate() {
+
     val workstations = elementsState.value
             .filterIsInstance<ConnectableElement>()
-            .map { it.mapToAlgorithmEntity() }
+//            .map { it.mapToAlgorithmEntity() }
     val lines = elementsState.value
             .filterIsInstance<ElementLine>()
-            .map { it.mapToAlgorithmEntity() }
-    val alg = BellmanFordAlgorithm(workstations, lines)
-    if (workstations.isEmpty()) return
-    alg.calculate(workstations.first())
+//            .map { it.mapToAlgorithmEntity() }
+    CalculationWindow(workstations = workstations, lines)
+//    val alg = BellmanFordAlgorithm(workstations, lines)
+//    if (workstations.isEmpty()) return
+//    alg.calculate(workstations.first())
 }
 
 private fun PanelPageContext.onCancel() {

@@ -22,7 +22,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun EditText(
@@ -32,7 +34,7 @@ fun EditText(
         errorIcon: String = "error.png",
         onErrorIconClicked: (String) -> Unit = { onErrIconClicked(it) },
         modifier: Modifier = Modifier,
-        textStyle: TextStyle = TextStyle.Default,
+        textStyle: TextStyle = TextStyle.Default.copy(fontSize = 15.sp),
         maxLines: Int = Int.MAX_VALUE,
         onImeActionPerformed: (ImeAction) -> Unit = {},
         visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -60,7 +62,7 @@ fun EditText(
     )
     if (!error.isNullOrBlank()) {
         Spacer(modifier = Modifier.height(1.dp).width(5.dp))
-        Image(asset = imageFromResource(errorIcon),
+        Image(imageFromResource(errorIcon),
                 modifier = Modifier
                         .width(18.dp)
                         .height(18.dp)
