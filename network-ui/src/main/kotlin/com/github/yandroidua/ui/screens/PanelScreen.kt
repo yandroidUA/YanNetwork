@@ -17,17 +17,24 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.imageFromResource
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.unit.dp
-import com.github.yandroidua.algorithm.BellmanFordAlgorithm
 import com.github.yandroidua.ui.MAIN_WINDOW_TITLE
 import com.github.yandroidua.ui.WIDTH
-import com.github.yandroidua.ui.elements.*
+import com.github.yandroidua.ui.elements.ElementCommunicationNode
+import com.github.yandroidua.ui.elements.ElementLine
+import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.elements.base.ImageControlElement
-import com.github.yandroidua.ui.mappers.mapToAlgorithmEntity
 import com.github.yandroidua.ui.screens.details.DetailsScreen
 import com.github.yandroidua.ui.utils.StartEndOffset
+import com.github.yandroidua.ui.utils.TabType
+
+// ------------------------------------Constants------------------------------------------------------------------------
+
+private const val DETAILS_SCREEN_WIDTH = 350
+
+// ------------------------------------PanelPageContext-----------------------------------------------------------------
 
 data class PanelPageContext(
         val elementsState: MutableState<List<Element>>,
@@ -36,101 +43,6 @@ data class PanelPageContext(
         var lineCreationLastTouchOffset: Offset? = null,
         var selectedElementType: ElementType? = null /* represent type clicked from bottom control panel bar */
 )
-
-private const val DETAILS_SCREEN_WIDTH = 350
-
-private fun getElementOrNull(elements: List<Element>, offset: Offset): Element? {
-    return elements.filterIsInstance<ImageControlElement>().find { it.isInOffset(offset) }
-            ?: elements.find { it.isInOffset(offset) }
-}
-
-private fun onDetailsShow(show: Boolean) {
-    val window = AppManager.windows.find { it.title == MAIN_WINDOW_TITLE } ?: return
-    window.setSize(
-            width = if (show && window.width <= WIDTH)
-                WIDTH + DETAILS_SCREEN_WIDTH
-            else
-                if (window.width <= WIDTH + DETAILS_SCREEN_WIDTH)
-                    WIDTH
-                else
-                    window.width,
-            height = window.height
-    )
-}
-
-@Composable
-fun PanelScreen(modifier: Modifier = Modifier, pageContext: PanelPageContext) = Row(modifier) {
-    Column(modifier = Modifier.weight(weight = 1f)) {
-        DrawArea(pageContext) { onDetailsShow(show = pageContext.selectedElementState.value != null) }
-        ControlPanel(pageContext)
-    }
-    if (pageContext.selectedElementState.value != null) {
-        DetailsScreen(
-                modifier = Modifier
-                        .width(width = DETAILS_SCREEN_WIDTH.dp)
-                        .background(Color.Green)
-                        .fillMaxHeight(),
-                element = pageContext.selectedElementState.value!!
-        ) { element -> pageContext.changeElement(element) }
-    }
-}
-
-@Composable
-private fun ControlPanel(contextPanel: PanelPageContext) = Row(
-        modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(align = Alignment.Bottom)
-                .background(Color.White)
-                .border(width = 2.dp, color = Color.Black, shape = RectangleShape)
-                .padding(10.dp)
-) {
-    Row(modifier = Modifier.weight(weight = 1f)) {
-        Image(imageFromResource("workstation.png"),
-                modifier = Modifier
-                        .width(32.dp)
-                        .height(32.dp)
-                        .clickable { contextPanel.changeSelectedType(ElementType.WORKSTATION) }
-        )
-        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-        Image(imageFromResource("communication_node.png"),
-                modifier = Modifier
-                        .width(32.dp)
-                        .height(32.dp)
-                        .clickable { contextPanel.changeSelectedType(ElementType.COMMUNICATION_NODE) }
-        )
-        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-        Image(imageFromResource("line.jpg"),
-                modifier = Modifier
-                        .width(32.dp)
-                        .height(32.dp)
-                        .clickable { contextPanel.changeSelectedType(ElementType.LINE) }
-        )
-        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-        Button(onClick = contextPanel::undo) { Text(text = "Undo") }
-        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-        Button(onClick = contextPanel::onCancel) { Text(text = "Cancel") }
-        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
-        Button(onClick = contextPanel::calculate) { Text(text = "Calculate") }
-    }
-    Button(onClick = contextPanel::clear) { Text(text = "Clear") }
-}
-
-@Composable
-private fun ColumnScope.DrawArea(
-        panelPageContext: PanelPageContext,
-        onDetailInfoClicked: (Element) -> Unit
-) = Canvas(
-        modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .weight(1f)
-                .pointerMoveFilter(onMove = { panelPageContext.onMouseMoved(it) }, onEnter =  { true })
-                .tapGestureFilter { panelPageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
-) {
-    panelPageContext.elementsState.value.forEach {
-        it.onDraw(this)
-    }
-}
 
 private fun PanelPageContext.changeSelectedType(type: ElementType) {
     selectedElementType = type
@@ -176,18 +88,10 @@ private fun PanelPageContext.changeElement(newElement: Element) {
     }
 }
 
-private fun PanelPageContext.calculate() {
-
-    val workstations = elementsState.value
-            .filterIsInstance<ConnectableElement>()
-//            .map { it.mapToAlgorithmEntity() }
-    val lines = elementsState.value
-            .filterIsInstance<ElementLine>()
-//            .map { it.mapToAlgorithmEntity() }
-    CalculationWindow(workstations = workstations, lines) {}
-//    val alg = BellmanFordAlgorithm(workstations, lines)
-//    if (workstations.isEmpty()) return
-//    alg.calculate(workstations.first())
+private fun PanelPageContext.calculate(navigator: (TabType, Any?) -> Unit) {
+    val workstations = elementsState.value.filterIsInstance<ConnectableElement>()
+    val lines = elementsState.value.filterIsInstance<ElementLine>()
+    CalculationWindow(workstations = workstations, lines) { result -> navigator(TabType.RESULTS, result) }
 }
 
 private fun PanelPageContext.onCancel() {
@@ -239,31 +143,7 @@ private fun PanelPageContext.undo() {
     }
 }
 
-private fun checkInfoClick(
-        contextPanel: PanelPageContext,
-        type: ElementType?,
-        position: Offset,
-        onDetailInfoClicked: (Element) -> Unit
-): Boolean {
-    val elementOnPosition = getElementOrNull(contextPanel.elementsState.value, position) ?: return false
-    return when (elementOnPosition.type) {
-        ElementType.WORKSTATION -> if(type != ElementType.LINE) {
-            contextPanel.selectedElementState.value = elementOnPosition
-            onWorkstationInfo(elementOnPosition as ElementWorkstation, onDetailInfoClicked)
-            true
-        } else false
-        ElementType.LINE -> {
-            contextPanel.selectedElementState.value = elementOnPosition
-            onLineInfo(elementOnPosition as ElementLine, onDetailInfoClicked)
-            true
-        }
-        ElementType.COMMUNICATION_NODE -> if(type != ElementType.LINE) {
-            contextPanel.selectedElementState.value = elementOnPosition
-            onCommunicationNodeInfo(elementOnPosition as ElementCommunicationNode, onDetailInfoClicked)
-            true
-        } else false
-    }
-}
+// -----------------------------UtilsFunctions--------------------------------------------------------------------------
 
 private fun onLineInfo(elementLine: ElementLine, onDetailInfoClicked: (Element) -> Unit) {
     println("Line info")
@@ -275,7 +155,10 @@ private fun onWorkstationInfo(elementWorkstation: ElementWorkstation, onDetailIn
     onDetailInfoClicked(elementWorkstation)
 }
 
-private fun onCommunicationNodeInfo(elementCommunicationNode: ElementCommunicationNode, onDetailInfoClicked: (Element) -> Unit) {
+private fun onCommunicationNodeInfo(
+        elementCommunicationNode: ElementCommunicationNode,
+        onDetailInfoClicked: (Element) -> Unit
+) {
     println("onCommunicationNodeInfo")
     onDetailInfoClicked(elementCommunicationNode)
 }
@@ -349,4 +232,129 @@ private fun onCommunicationNodeCreate(contextPanel: PanelPageContext, offset: Of
         add(ElementCommunicationNode(contextPanel.elementCounter, offset))
     }
     contextPanel.elementCounter++
+}
+
+private fun getElementOrNull(elements: List<Element>, offset: Offset): Element? {
+    return elements.filterIsInstance<ImageControlElement>().find { it.isInOffset(offset) }
+            ?: elements.find { it.isInOffset(offset) }
+}
+
+private fun onDetailsShow(show: Boolean) {
+    val window = AppManager.windows.find { it.title == MAIN_WINDOW_TITLE } ?: return
+    window.setSize(
+            width = if (show && window.width <= WIDTH)
+                WIDTH + DETAILS_SCREEN_WIDTH
+            else
+                if (window.width <= WIDTH + DETAILS_SCREEN_WIDTH)
+                    WIDTH
+                else
+                    window.width,
+            height = window.height
+    )
+}
+
+//---------------------------------UI-----------------------------------------------------------------------------------
+
+@Composable
+fun PanelScreen(
+        modifier: Modifier = Modifier,
+        pageContext: PanelPageContext,
+        navigator: (TabType, Any?) -> Unit
+) = Row(modifier) {
+    Column(modifier = Modifier.weight(weight = 1f)) {
+        DrawArea(pageContext) { onDetailsShow(show = pageContext.selectedElementState.value != null) }
+        ControlPanel(pageContext, navigator)
+    }
+    if (pageContext.selectedElementState.value != null) {
+        DetailsScreen(
+                modifier = Modifier
+                        .width(width = DETAILS_SCREEN_WIDTH.dp)
+                        .background(Color.Green)
+                        .fillMaxHeight(),
+                element = pageContext.selectedElementState.value!!
+        ) { element -> pageContext.changeElement(element) }
+    }
+}
+
+@Composable
+private fun ControlPanel(contextPanel: PanelPageContext, navigator: (TabType, Any?) -> Unit) = Row(
+        modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(align = Alignment.Bottom)
+                .background(Color.White)
+                .border(width = 2.dp, color = Color.Black, shape = RectangleShape)
+                .padding(10.dp)
+) {
+    Row(modifier = Modifier.weight(weight = 1f)) {
+        Image(imageFromResource("workstation.png"),
+                modifier = Modifier
+                        .width(32.dp)
+                        .height(32.dp)
+                        .clickable { contextPanel.changeSelectedType(ElementType.WORKSTATION) }
+        )
+        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Image(imageFromResource("communication_node.png"),
+                modifier = Modifier
+                        .width(32.dp)
+                        .height(32.dp)
+                        .clickable { contextPanel.changeSelectedType(ElementType.COMMUNICATION_NODE) }
+        )
+        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Image(imageFromResource("line.jpg"),
+                modifier = Modifier
+                        .width(32.dp)
+                        .height(32.dp)
+                        .clickable { contextPanel.changeSelectedType(ElementType.LINE) }
+        )
+        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Button(onClick = contextPanel::undo) { Text(text = "Undo") }
+        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Button(onClick = contextPanel::onCancel) { Text(text = "Cancel") }
+        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Button(onClick = { contextPanel.calculate(navigator) }) { Text(text = "Calculate") }
+    }
+    Button(onClick = contextPanel::clear) { Text(text = "Clear") }
+}
+
+@Composable
+private fun ColumnScope.DrawArea(
+        panelPageContext: PanelPageContext,
+        onDetailInfoClicked: (Element) -> Unit
+) = Canvas(
+        modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .weight(1f)
+                .pointerMoveFilter(onMove = { panelPageContext.onMouseMoved(it) }, onEnter =  { true })
+                .tapGestureFilter { panelPageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
+) {
+    panelPageContext.elementsState.value.forEach {
+        it.onDraw(this)
+    }
+}
+
+private fun checkInfoClick(
+        contextPanel: PanelPageContext,
+        type: ElementType?,
+        position: Offset,
+        onDetailInfoClicked: (Element) -> Unit
+): Boolean {
+    val elementOnPosition = getElementOrNull(contextPanel.elementsState.value, position) ?: return false
+    return when (elementOnPosition.type) {
+        ElementType.WORKSTATION -> if(type != ElementType.LINE) {
+            contextPanel.selectedElementState.value = elementOnPosition
+            onWorkstationInfo(elementOnPosition as ElementWorkstation, onDetailInfoClicked)
+            true
+        } else false
+        ElementType.LINE -> {
+            contextPanel.selectedElementState.value = elementOnPosition
+            onLineInfo(elementOnPosition as ElementLine, onDetailInfoClicked)
+            true
+        }
+        ElementType.COMMUNICATION_NODE -> if(type != ElementType.LINE) {
+            contextPanel.selectedElementState.value = elementOnPosition
+            onCommunicationNodeInfo(elementOnPosition as ElementCommunicationNode, onDetailInfoClicked)
+            true
+        } else false
+    }
 }
