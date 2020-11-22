@@ -56,7 +56,6 @@ fun CalculationWindow(
                                     onClick = {
                                         workstationFromDropDownState.value = false
                                         calcState.value = calcState.value.copy(fromWorkstation = workstation)
-                                        val wtf = true
                                     }
                             ) { Text(text = workstation.id.toString()) }
                         }
@@ -81,7 +80,6 @@ fun CalculationWindow(
                                     onClick = {
                                         workstationToDropDownState.value = false
                                         calcState.value = calcState.value.copy(toWorkstation = workstation)
-                                        val a = true
                                     }
                             ) { Text(text = workstation.id.toString()) }
                         }

@@ -5,6 +5,15 @@ class BellmanFordAlgorithm(
         private val lines: List<Line>
 ) {
 
+    fun calculate(from: Workstation, to: Workstation): List<Pair<Int, List<Int>>> {
+        val k = workstations.size
+        val result = mutableListOf<Pair<Int, List<Int>>>()
+        repeat(times = k - 1) { count ->
+            result.add(getConnectionOr(from, to, count + 1))
+        }
+        return result
+    }
+
     fun calculate(from: Workstation): Array<Array<Pair<Int, List<Int>>>> {
         // count of stations
         val k = workstations.size
