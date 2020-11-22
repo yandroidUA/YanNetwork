@@ -5,11 +5,11 @@ class BellmanFordAlgorithm(
         private val lines: List<Line>
 ) {
 
-    fun calculate(from: Workstation): Array<Array<Int>> {
+    fun calculate(from: Workstation): Array<Array<Pair<Int, List<Int>>>> {
         // count of stations
         val k = workstations.size
         // allocation [k][k-1] matrix, where k - for stations, and k-1 for path result from
-        val result = Array(size = k) { Array(size = k - 1) { Int.MAX_VALUE } }
+        val result = Array(size = k) { Array(size = k - 1) { Pair(Int.MAX_VALUE, emptyList<Int>()) } }
         repeat(times = k) { index ->
             repeat(times = k - 1) { count ->
                 result[index][count] = getConnectionOr(from = from, workstations[index], count + 1)
@@ -18,9 +18,14 @@ class BellmanFordAlgorithm(
         return result
     }
 
-    private fun getConnectionOr(from: Workstation, to: Workstation, count: Int, or: Int = Int.MAX_VALUE): Int {
-        if (from.number == to.number) return 0
-        if (count <= 0) return or
+    private fun getConnectionOr(
+            from: Workstation,
+            to: Workstation,
+            count: Int,
+            or: Int = Int.MAX_VALUE
+    ): Pair<Int, List<Int>> {
+        if (from.number == to.number) return 0 to listOf()
+        if (count <= 0) return or to listOf()
         return from.linesId
                 .asSequence()
                 .flatMap { lineId ->
@@ -33,10 +38,13 @@ class BellmanFordAlgorithm(
                 .filterNotNull() // remove all failure search
                 .map {
                     val conn = getConnectionOr(from = it.first, to = to, count = count - 1, or = or)
-                    if (conn == or) or else conn + it.second.weight
-                } // start searching new way to get to the station and add weight of current line
-                .minOrNull() // get min weight from all lines
-                ?: or // if no way from to to default value will be returned
+                    if (conn.first == or)
+                        conn
+                    else
+                        (conn.first + it.second.weight) to conn.second.toMutableList().apply { add(it.second.id) }
+                }
+                .minByOrNull { it.first } // get min weight from all lines
+                ?: or to listOf() // if no way from to to default value will be returned
     }
 
 }
