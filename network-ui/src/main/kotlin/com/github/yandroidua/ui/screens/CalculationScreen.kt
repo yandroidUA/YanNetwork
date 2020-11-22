@@ -10,12 +10,18 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.ExperimentalKeyInput
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.github.yandroidua.algorithm.BellmanFordAlgorithm
+import com.github.yandroidua.algorithm.Line
+import com.github.yandroidua.algorithm.Workstation
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.base.ConnectableElement
+import com.github.yandroidua.ui.mappers.mapToAlgorithmEntity
+import com.github.yandroidua.ui.utils.PathCalculationResult
 
 data class CalculationState(
         val fromWorkstation: ConnectableElement? = null,
@@ -25,20 +31,23 @@ data class CalculationState(
 @OptIn(ExperimentalKeyInput::class)
 fun CalculationWindow(
         workstations: List<ConnectableElement>,
-        lines: List<ElementLine>
+        lines: List<ElementLine>,
+        onCalculated: (PathCalculationResult) -> Unit
 ) {
-    AppWindow(size = IntSize(400, 300)).also {
+    val window = AppWindow(size = IntSize(400, 300)).also {
         it.keyboard.setShortcut(Key.Escape) {
             it.close()
         }
-    }.show {
+    }
+    window.show {
         val workstationToDropDownState = remember { mutableStateOf(false) }
         val workstationFromDropDownState = remember { mutableStateOf(false) }
         val calcState = remember { mutableStateOf(CalculationState()) }
+        val errorFromState = remember { mutableStateOf(false) }
         Column(modifier = Modifier.padding(10.dp)) {
             Column(modifier = Modifier.weight(1f)) {
                 Row {
-                    Text(text = "From workstation:")
+                    Text(text = "From workstation:", color = if (errorFromState.value) Color.Red else Color.Black)
                     Spacer(modifier = Modifier.height(1.dp).width(5.dp))
                     DropdownMenu(
                             toggleModifier = Modifier.wrapContentSize(),
@@ -54,6 +63,7 @@ fun CalculationWindow(
                         for (workstation in workstations) {
                             DropdownMenuItem(
                                     onClick = {
+                                        errorFromState.value = false
                                         workstationFromDropDownState.value = false
                                         calcState.value = calcState.value.copy(fromWorkstation = workstation)
                                     }
@@ -86,7 +96,41 @@ fun CalculationWindow(
                     }
                 }
             }
-            Button(onClick = {}) { Text(text = "Calculate") }
+            Button(onClick = {
+                if (calcState.value.fromWorkstation == null) {
+                    errorFromState.value = true
+                } else {
+                    errorFromState.value = false
+                    onCalculated(onCalculateClicked(
+                            workstations = workstations.map { it.mapToAlgorithmEntity() },
+                            lines = lines.map { it.mapToAlgorithmEntity() },
+                            from = calcState.value.fromWorkstation!!.mapToAlgorithmEntity(),
+                            to = calcState.value.toWorkstation?.mapToAlgorithmEntity()
+                    ))
+                    window.close()
+                }
+
+            }, modifier = Modifier.fillMaxWidth()) { Text(text = "Calculate") }
         }
     }
+}
+
+private fun onCalculateClicked(
+        workstations: List<Workstation>,
+        lines: List<Line>,
+        from: Workstation,
+        to: Workstation?
+): PathCalculationResult {
+    val bellmanFordAlgorithm = BellmanFordAlgorithm(workstations, lines)
+    if (to == null) {
+        return PathCalculationResult.MultiResult(
+                from = from,
+                paths = bellmanFordAlgorithm.calculate(from = from)
+        )
+    }
+    return PathCalculationResult.SingleResult(
+            from = from,
+            to = to,
+            path = bellmanFordAlgorithm.calculate(from = from, to = to)
+    )
 }

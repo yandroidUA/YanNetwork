@@ -184,7 +184,7 @@ private fun PanelPageContext.calculate() {
     val lines = elementsState.value
             .filterIsInstance<ElementLine>()
 //            .map { it.mapToAlgorithmEntity() }
-    CalculationWindow(workstations = workstations, lines)
+    CalculationWindow(workstations = workstations, lines) {}
 //    val alg = BellmanFordAlgorithm(workstations, lines)
 //    if (workstations.isEmpty()) return
 //    alg.calculate(workstations.first())
