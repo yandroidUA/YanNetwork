@@ -123,14 +123,11 @@ private fun onCalculateClicked(
 ): PathCalculationResult {
     val bellmanFordAlgorithm = BellmanFordAlgorithm(workstations, lines)
     if (to == null) {
-        return PathCalculationResult.MultiResult(
-                from = from,
+        return PathCalculationResult(
                 paths = bellmanFordAlgorithm.calculate(from = from)
         )
     }
-    return PathCalculationResult.SingleResult(
-            from = from,
-            to = to,
-            path = bellmanFordAlgorithm.calculate(from = from, to = to)
+    return PathCalculationResult(
+            paths = bellmanFordAlgorithm.calculate(from = from, to = to)
     )
 }

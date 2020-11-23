@@ -48,7 +48,7 @@ data class ElementLine(
         val topY = minOf(startEndOffset.startPoint.y, startEndOffset.endPoint.y)
         val rightX = maxOf(startEndOffset.startPoint.x, startEndOffset.endPoint.x)
         val bottomY = maxOf(startEndOffset.startPoint.y, startEndOffset.endPoint.y)
-        Rect(topLeft = Offset(leftX, topY), bottomRight = Offset(rightX, bottomY))
+        Rect(topLeft = Offset(leftX - LINE_THRESHOLD / 2f, topY - LINE_THRESHOLD / 2f), bottomRight = Offset(rightX + LINE_THRESHOLD / 2f, bottomY + LINE_THRESHOLD / 2f))
     }
     private val paint: Paint by lazy {
         Paint().apply {

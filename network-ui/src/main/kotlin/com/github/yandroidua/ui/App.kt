@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import com.github.yandroidua.ui.components.PageTab
+import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.screens.PanelPageContext
 import com.github.yandroidua.ui.screens.PanelScreen
 import com.github.yandroidua.ui.screens.ResultScreen
@@ -101,7 +102,7 @@ private fun MainNavigator(navigationState: MutableState<Pair<TabType, Any?>>) {
         TabType.PANEL -> createPanelScreen(arguments as? PanelPageContext) { tabType: TabType, argument: Any? ->
             navigateTo(navigationState, tabType, argument)
         }
-        TabType.RESULTS -> createResults(arguments as? PathCalculationResult)
+        TabType.RESULTS -> createResults(arguments as? PathCalculationResult, applicationState.panelScreenContextPanel?.elementsState?.value ?: emptyList())
     }
 }
 
@@ -117,9 +118,10 @@ private fun createPanelScreen(
 
 @Composable
 private fun createResults(
-        results: PathCalculationResult?
+        results: PathCalculationResult?,
+        elements: List<Element>
 ) {
     val res = results ?: applicationState.results
     applicationState.results = res
-    ResultScreen(result = res)
+    ResultScreen(result = res, elements = elements)
 }
