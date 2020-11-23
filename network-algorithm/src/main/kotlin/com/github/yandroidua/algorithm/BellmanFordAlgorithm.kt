@@ -9,12 +9,12 @@ class BellmanFordAlgorithm(
         val k = workstations.size
         val result = mutableListOf<PathResult>()
         repeat(times = k - 1) { count ->
-            val info = getConnectionOr(from, to, count + 1, first = true)
+            val info = getConnectionOr(from, to, count + 1)
             result.add(PathResult(
                     from = from.number,
                     to = to.number,
                     summary = info.first,
-                    path = info.second
+                    path = info.second.asReversed()
             ))
         }
         return result
@@ -27,12 +27,12 @@ class BellmanFordAlgorithm(
         val result = mutableListOf<PathResult>()
         repeat(times = k) { index ->
             repeat(times = k - 1) { count ->
-                val info = getConnectionOr(from = from, workstations[index], count + 1, first = true)
+                val info = getConnectionOr(from = from, workstations[index], count + 1)
                 result.add(PathResult(
                         from = from.number,
                         to = workstations[index].number,
                         summary = info.first,
-                        path = info.second
+                        path = info.second.asReversed()
                 ))
             }
         }
@@ -44,7 +44,6 @@ class BellmanFordAlgorithm(
             to: Workstation,
             count: Int,
             or: Int = Int.MAX_VALUE,
-            first: Boolean = false,
     ): Pair<Int, List<Pair<Int, Int>>> {
         if (from.number == to.number) return 0 to listOf()
         if (count <= 0) return or to listOf()
@@ -64,7 +63,7 @@ class BellmanFordAlgorithm(
                         conn
                     else
                         (conn.first + it.second.weight) to conn.second.toMutableList().apply {
-                            add(it.second.id to if (first) to.number else from.number)
+                            add(it.second.id to it.first.number)
                         }
                 }
                 .minByOrNull { it.first } // get min weight from all lines
