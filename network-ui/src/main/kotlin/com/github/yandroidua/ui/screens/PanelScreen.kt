@@ -253,6 +253,33 @@ private fun onDetailsShow(show: Boolean) {
     )
 }
 
+private fun checkInfoClick(
+        contextPanel: PanelPageContext,
+        type: ElementType?,
+        position: Offset,
+        onDetailInfoClicked: (Element) -> Unit
+): Boolean {
+    val elementOnPosition = getElementOrNull(contextPanel.elementsState.value, position) ?: return false
+    return when (elementOnPosition.type) {
+        ElementType.WORKSTATION -> if(type != ElementType.LINE) {
+            contextPanel.selectedElementState.value = elementOnPosition
+            onWorkstationInfo(elementOnPosition as ElementWorkstation, onDetailInfoClicked)
+            true
+        } else false
+        ElementType.LINE -> {
+            contextPanel.selectedElementState.value = elementOnPosition
+            onLineInfo(elementOnPosition as ElementLine, onDetailInfoClicked)
+            true
+        }
+        ElementType.COMMUNICATION_NODE -> if(type != ElementType.LINE) {
+            contextPanel.selectedElementState.value = elementOnPosition
+            onCommunicationNodeInfo(elementOnPosition as ElementCommunicationNode, onDetailInfoClicked)
+            true
+        } else false
+    }
+}
+
+
 //---------------------------------UI-----------------------------------------------------------------------------------
 
 @Composable
@@ -330,31 +357,5 @@ private fun ColumnScope.DrawArea(
 ) {
     panelPageContext.elementsState.value.forEach {
         it.onDraw(this)
-    }
-}
-
-private fun checkInfoClick(
-        contextPanel: PanelPageContext,
-        type: ElementType?,
-        position: Offset,
-        onDetailInfoClicked: (Element) -> Unit
-): Boolean {
-    val elementOnPosition = getElementOrNull(contextPanel.elementsState.value, position) ?: return false
-    return when (elementOnPosition.type) {
-        ElementType.WORKSTATION -> if(type != ElementType.LINE) {
-            contextPanel.selectedElementState.value = elementOnPosition
-            onWorkstationInfo(elementOnPosition as ElementWorkstation, onDetailInfoClicked)
-            true
-        } else false
-        ElementType.LINE -> {
-            contextPanel.selectedElementState.value = elementOnPosition
-            onLineInfo(elementOnPosition as ElementLine, onDetailInfoClicked)
-            true
-        }
-        ElementType.COMMUNICATION_NODE -> if(type != ElementType.LINE) {
-            contextPanel.selectedElementState.value = elementOnPosition
-            onCommunicationNodeInfo(elementOnPosition as ElementCommunicationNode, onDetailInfoClicked)
-            true
-        } else false
     }
 }

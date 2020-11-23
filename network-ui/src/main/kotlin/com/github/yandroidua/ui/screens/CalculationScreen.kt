@@ -23,10 +23,34 @@ import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.mappers.mapToAlgorithmEntity
 import com.github.yandroidua.ui.utils.PathCalculationResult
 
+//--------------------------------CalculationState----------------------------------------------------------------------
+
 data class CalculationState(
         val fromWorkstation: ConnectableElement? = null,
         val toWorkstation: ConnectableElement? = null
 )
+
+//--------------------------------Utils functions-----------------------------------------------------------------------
+
+private fun onCalculateClicked(
+        workstations: List<Workstation>,
+        lines: List<Line>,
+        from: Workstation,
+        to: Workstation?
+): PathCalculationResult {
+    val bellmanFordAlgorithm = BellmanFordAlgorithm(workstations, lines)
+    if (to == null) {
+        return PathCalculationResult(
+                paths = bellmanFordAlgorithm.calculate(from = from)
+        )
+    }
+    return PathCalculationResult(
+            paths = bellmanFordAlgorithm.calculate(from = from, to = to)
+    )
+}
+
+
+//--------------------------------UI------------------------------------------------------------------------------------
 
 @OptIn(ExperimentalKeyInput::class)
 fun CalculationWindow(
@@ -113,21 +137,4 @@ fun CalculationWindow(
             }, modifier = Modifier.fillMaxWidth()) { Text(text = "Calculate") }
         }
     }
-}
-
-private fun onCalculateClicked(
-        workstations: List<Workstation>,
-        lines: List<Line>,
-        from: Workstation,
-        to: Workstation?
-): PathCalculationResult {
-    val bellmanFordAlgorithm = BellmanFordAlgorithm(workstations, lines)
-    if (to == null) {
-        return PathCalculationResult(
-                paths = bellmanFordAlgorithm.calculate(from = from)
-        )
-    }
-    return PathCalculationResult(
-            paths = bellmanFordAlgorithm.calculate(from = from, to = to)
-    )
 }

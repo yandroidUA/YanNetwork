@@ -46,10 +46,7 @@ interface Dumper {
         }
 
         override fun dump(): Dumper {
-            var writer = File(path).printWriter(charset("UTF8"))
-            writer.print("")
-            writer.close()
-            writer = File(path).printWriter(charset("UTF8"))
+            val writer = File(path).printWriter(charset("UTF8"))
             writer.println(json.encodeToJsonElement(ConfigDump.serializer(), configDump))
             writer.close()
             return this
