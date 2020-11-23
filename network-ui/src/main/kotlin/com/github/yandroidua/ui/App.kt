@@ -15,7 +15,9 @@ import androidx.compose.ui.unit.IntSize
 import com.github.yandroidua.ui.components.PageTab
 import com.github.yandroidua.ui.screens.PanelPageContext
 import com.github.yandroidua.ui.screens.PanelScreen
+import com.github.yandroidua.ui.screens.ResultScreen
 import com.github.yandroidua.ui.screens.SettingsScreen
+import com.github.yandroidua.ui.utils.PathCalculationResult
 import com.github.yandroidua.ui.utils.TabType
 
 //-----------------------------------Constants--------------------------------------------------------------------------
@@ -30,7 +32,8 @@ private const val TITLE_RESULTS = "Results"
 //------------------------------------AppState--------------------------------------------------------------------------
 
 data class AppState(
-        var panelScreenContextPanel: PanelPageContext? = null
+        var panelScreenContextPanel: PanelPageContext? = null,
+        var results: PathCalculationResult? = null
 )
 
 //-----------------------------------Utils functions--------------------------------------------------------------------
@@ -61,7 +64,7 @@ fun main() = Window(
 ) {
     val navigationState: MutableState<Pair<TabType, Any?>> = remember { mutableStateOf(TabType.SETTINGS to null) }
 
-    Column(modifier = Modifier.fillMaxWidth().background(color = Color.Magenta)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier
                 .fillMaxWidth(fraction = 1f)
                 .background(color = Color.Gray)
@@ -98,7 +101,7 @@ private fun MainNavigator(navigationState: MutableState<Pair<TabType, Any?>>) {
         TabType.PANEL -> createPanelScreen(arguments as? PanelPageContext) { tabType: TabType, argument: Any? ->
             navigateTo(navigationState, tabType, argument)
         }
-        TabType.RESULTS -> Text(text = "RESULTS")
+        TabType.RESULTS -> createResults(arguments as? PathCalculationResult)
     }
 }
 
@@ -110,4 +113,13 @@ private fun createPanelScreen(
     val pageContext = panelPageContext ?: createEmptyPageContextState()
     applicationState.panelScreenContextPanel = pageContext
     PanelScreen(pageContext = pageContext, navigator = navigator)
+}
+
+@Composable
+private fun createResults(
+        results: PathCalculationResult?
+) {
+    val res = results ?: applicationState.results
+    applicationState.results = res
+    ResultScreen(result = res)
 }
