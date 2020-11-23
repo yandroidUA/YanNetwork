@@ -12,14 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
+import com.github.yandroidua.dump.Dumper
 import com.github.yandroidua.ui.components.PageTab
 import com.github.yandroidua.ui.elements.base.Element
-import com.github.yandroidua.ui.screens.PanelPageContext
-import com.github.yandroidua.ui.screens.PanelScreen
-import com.github.yandroidua.ui.screens.ResultScreen
-import com.github.yandroidua.ui.screens.SettingsScreen
+import com.github.yandroidua.ui.screens.*
 import com.github.yandroidua.ui.utils.PathCalculationResult
 import com.github.yandroidua.ui.utils.TabType
+import com.github.yandroidua.ui.utils.addToDumpElements
+import com.github.yandroidua.ui.utils.toApplicationState
 
 //-----------------------------------Constants--------------------------------------------------------------------------
 
@@ -34,7 +34,8 @@ private const val TITLE_RESULTS = "Results"
 
 data class AppState(
         var panelScreenContextPanel: PanelPageContext? = null,
-        var results: PathCalculationResult? = null
+        var results: PathCalculationResult? = null,
+        var settingsState: SettingsState? = null
 )
 
 //-----------------------------------Utils functions--------------------------------------------------------------------
@@ -47,12 +48,36 @@ private fun createEmptyPageContextState(): PanelPageContext {
     )
 }
 
+@Composable
+private fun createEmptySettingsState(): SettingsState {
+    return SettingsState(dumpPathState = mutableStateOf("D:\\Projects\\test.txt"))
+}
+
+@Composable
+private fun loadStateFromDump(path: String, navigationState: MutableState<Pair<TabType, Any?>>) {
+    Dumper.EasyDumper().path(path).read()?.toApplicationState()?.let {
+        applicationState.panelScreenContextPanel = it.panelScreenContextPanel
+        applicationState.results = it.results
+    }
+    navigateTo(navigationState, navigationState.value.first, navigationState.value.second)
+}
+
 private fun navigateTo(state: MutableState<Pair<TabType, Any?>>, tabType: TabType, args: Any? = null) {
     state.value = tabType to args
 }
 
 private fun isCurrentNavigation(state: MutableState<Pair<TabType, Any?>>, direction: TabType): Boolean {
     return state.value.first == direction
+}
+
+private fun dumpState(path: String) {
+    applicationState.panelScreenContextPanel?.let {
+        val d = Dumper.EasyDumper()
+                .path(path = path)
+                .addToDumpElements(it.elementsState.value)
+
+        d.dump()
+    }
 }
 
 //-----------------------------------UI---------------------------------------------------------------------------------
@@ -98,11 +123,14 @@ fun main() = Window(
 private fun MainNavigator(navigationState: MutableState<Pair<TabType, Any?>>) {
     val arguments = navigationState.value.second
     when (navigationState.value.first) {
-        TabType.SETTINGS -> SettingsScreen()
+        TabType.SETTINGS -> createSettings(applicationState.settingsState, navigationState)
         TabType.PANEL -> createPanelScreen(arguments as? PanelPageContext) { tabType: TabType, argument: Any? ->
             navigateTo(navigationState, tabType, argument)
         }
-        TabType.RESULTS -> createResults(arguments as? PathCalculationResult, applicationState.panelScreenContextPanel?.elementsState?.value ?: emptyList())
+        TabType.RESULTS -> createResults(
+                arguments as? PathCalculationResult,
+                applicationState.panelScreenContextPanel?.elementsState?.value ?: emptyList()
+        )
     }
 }
 
@@ -124,4 +152,18 @@ private fun createResults(
     val res = results ?: applicationState.results
     applicationState.results = res
     ResultScreen(result = res, elements = elements)
+}
+
+@Composable
+private fun createSettings(
+        settingsState: SettingsState?,
+        navigationState: MutableState<Pair<TabType, Any?>>
+) {
+    val state = settingsState ?: createEmptySettingsState()
+    applicationState.settingsState = state
+    SettingsScreen(
+            settingsState = state,
+            dumper = { path -> dumpState(path) },
+            loader = { path -> loadStateFromDump(path, navigationState) }
+    )
 }

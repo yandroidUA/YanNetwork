@@ -5,11 +5,15 @@ import androidx.compose.ui.graphics.Color
 import com.github.yandroidua.algorithm.Line
 import com.github.yandroidua.algorithm.LineType
 import com.github.yandroidua.algorithm.Workstation
+import com.github.yandroidua.dump.models.*
+import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.utils.StartEndOffset
+
+//-----------------------------------Algorithm models-------------------------------------------------------------------
 
 fun Workstation.mapToUiElement(): ConnectableElement = ElementWorkstation(
         id = number,
@@ -27,6 +31,36 @@ fun Line.mapToUiElement(): Element = ElementLine(
         state = ElementLine.State.CREATED
 )
 
+//------------------------------------Dump models-----------------------------------------------------------------------
+
+fun WorkstationDump.mapToUiElement(): ConnectableElement = ElementWorkstation(
+        id = id,
+        offset = offset.mapToOffset(),
+        lineIds = lineIds.toMutableList()
+)
+
+fun CommunicationNodeDump.mapToUiElement(): ConnectableElement = ElementCommunicationNode(
+        id = id,
+        offset = offset.mapToOffset(),
+        lineIds = lineIds.toMutableList()
+)
+
+fun OffsetDump.mapToOffset(): Offset = Offset(x, y)
+
+fun ColorDump.mapToColor(): Color = Color(red, green, blue, 0xFF)
+
+fun LineDump.mapToUiElement(): Element = ElementLine(
+        id = id,
+        secondStationId = secondStationId,
+        firstStationId = firstStationId,
+        weight = weight,
+        startEndOffset = StartEndOffset(startOffset.mapToOffset(), endOffset.mapToOffset()),
+        color = color.mapToColor(),
+        state = ElementLine.State.valueOf(state)
+)
+
+//------------------------------------UI models-------------------------------------------------------------------------
+
 fun ElementLine.mapToAlgorithmEntity(): Line = Line(
         id = id,
         station1Number = firstStationId,
@@ -39,4 +73,32 @@ fun ElementLine.mapToAlgorithmEntity(): Line = Line(
 fun ConnectableElement.mapToAlgorithmEntity(): Workstation = Workstation(
         number = id,
         linesId = lineIds
+)
+
+fun Offset.mapToDump(): OffsetDump = OffsetDump(x, y)
+
+fun Color.mapToDump(): ColorDump = ColorDump(red.toInt(), green.toInt(), blue.toInt(), alpha.toInt())
+
+fun ElementWorkstation.mapToDump(): WorkstationDump = WorkstationDump(
+        id = id,
+        offset = offset.mapToDump(),
+        lineIds = lineIds
+)
+
+fun ElementCommunicationNode.mapToDump(): CommunicationNodeDump = CommunicationNodeDump(
+        id = id,
+        offset = offset.mapToDump(),
+        lineIds = lineIds
+)
+
+fun ElementLine.mapToDump(): LineDump = LineDump(
+        id = id,
+        secondStationId = secondStationId,
+        firstStationId = firstStationId,
+        weight = weight,
+        startOffset = startEndOffset.startPoint.mapToDump(),
+        endOffset = startEndOffset.endPoint.mapToDump(),
+        color = color.mapToDump(),
+        state = state.name,
+        isInMovement = isInMovement
 )
