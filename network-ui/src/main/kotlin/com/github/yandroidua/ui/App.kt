@@ -44,8 +44,7 @@ data class AppState(
 private fun createEmptyPageContextState(): PanelPageContext {
     return PanelPageContext(
             elementsState = mutableStateOf(emptyList()),
-            selectedElementState = mutableStateOf(null),
-            dragableState =  mutableStateOf(false)
+            selectedElementState = mutableStateOf(null)
     )
 }
 

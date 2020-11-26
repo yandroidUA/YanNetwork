@@ -44,7 +44,6 @@ private const val DETAILS_SCREEN_WIDTH = 350
 data class PanelPageContext(
         val elementsState: MutableState<List<Element>>,
         val selectedElementState: MutableState<Element?>,
-        var dragableState: MutableState<Boolean>,
         var elementCounter: Int = 0,
         var lineCreationLastTouchOffset: Offset? = null,
         var selectedElementType: ElementType? = null /* represent type clicked from bottom control panel bar */
@@ -355,8 +354,6 @@ private fun ControlPanel(contextPanel: PanelPageContext, navigator: (TabType, An
         Button(onClick = contextPanel::onCancel) { Text(text = "Cancel") }
         Spacer(modifier = Modifier.width(20.dp))
         Button(onClick = { contextPanel.calculate(navigator) }) { Text(text = "Calculate") }
-        Spacer(modifier = Modifier.width(20.dp))
-        Button(onClick = { contextPanel.dragableState.value = !contextPanel.dragableState.value }) { Text(text = "Calculate") }
     }
     Button(onClick = contextPanel::clear) { Text(text = "Clear") }
 }
