@@ -3,7 +3,11 @@ package com.github.yandroidua.ui.screens
 
 import androidx.compose.desktop.AppManager
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.ScrollableController
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -11,6 +15,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.gesture.scrollorientationlocking.Orientation
 import androidx.compose.ui.gesture.tapGestureFilter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -39,6 +44,7 @@ private const val DETAILS_SCREEN_WIDTH = 350
 data class PanelPageContext(
         val elementsState: MutableState<List<Element>>,
         val selectedElementState: MutableState<Element?>,
+        var dragableState: MutableState<Boolean>,
         var elementCounter: Int = 0,
         var lineCreationLastTouchOffset: Offset? = null,
         var selectedElementType: ElementType? = null /* represent type clicked from bottom control panel bar */
@@ -88,6 +94,32 @@ private fun PanelPageContext.changeElement(newElement: Element) {
     }
 }
 
+private fun PanelPageContext.removeElement(element: Element) {
+    elementsState.value = when (element.type) {
+        ElementType.WORKSTATION -> {
+            val connectedLines = elementsState.value.filterIsInstance<ElementLine>()
+                    .filter { it.firstStationId == element.id || it.secondStationId == element.id }
+            connectedLines.forEach { removeElement(it) }
+            elementsState.value.toMutableList().apply { remove(element) }
+        }
+        ElementType.LINE -> {
+            lineCreationLastTouchOffset = null
+            val line = element as ElementLine
+            (elementsState.value.find { it.id == line.secondStationId } as? ConnectableElement)?.lineIds?.remove(line.id)
+            (elementsState.value.find { it.id == line.firstStationId } as? ConnectableElement)?.lineIds?.remove(line.id)
+            elementsState.value.toMutableList().apply { remove(element) }
+        }
+        ElementType.COMMUNICATION_NODE -> {
+            val connectedLines = elementsState.value.filterIsInstance<ElementLine>()
+                    .filter { it.firstStationId == element.id || it.secondStationId == element.id }
+            connectedLines.forEach { removeElement(it) }
+            elementsState.value.toMutableList().apply { remove(element) }
+        }
+    }
+    elementCounter--
+    onCancel()
+}
+
 private fun PanelPageContext.calculate(navigator: (TabType, Any?) -> Unit) {
     val workstations = elementsState.value.filterIsInstance<ConnectableElement>()
     val lines = elementsState.value.filterIsInstance<ElementLine>()
@@ -123,24 +155,7 @@ private fun PanelPageContext.undo() {
         selectedElementState.value = null
         return
     }
-    elementsState.value = when (lastElement.type) {
-        ElementType.WORKSTATION -> {
-            elementCounter--
-            elementsState.value.toMutableList().apply { removeLast() }
-        }
-        ElementType.LINE -> {
-            elementCounter--
-            lineCreationLastTouchOffset = null
-            val line = lastElement as ElementLine
-            (elementsState.value.find { it.id == line.secondStationId } as? ConnectableElement)?.lineIds?.remove(line.id)
-            (elementsState.value.find { it.id == line.firstStationId } as? ConnectableElement)?.lineIds?.remove(line.id)
-            elementsState.value.toMutableList().apply { removeLast() }
-        }
-        ElementType.COMMUNICATION_NODE -> {
-            elementCounter--
-            elementsState.value.toMutableList().apply { removeLast() }
-        }
-    }
+    removeElement(lastElement)
 }
 
 // -----------------------------UtilsFunctions--------------------------------------------------------------------------
@@ -279,7 +294,6 @@ private fun checkInfoClick(
     }
 }
 
-
 //---------------------------------UI-----------------------------------------------------------------------------------
 
 @Composable
@@ -289,7 +303,7 @@ fun PanelScreen(
         navigator: (TabType, Any?) -> Unit
 ) = Row(modifier) {
     Column(modifier = Modifier.weight(weight = 1f)) {
-        DrawArea(pageContext) { onDetailsShow(show = pageContext.selectedElementState.value != null) }
+        DrawArea(Modifier.weight(1f), pageContext) { onDetailsShow(show = pageContext.selectedElementState.value != null) }
         ControlPanel(pageContext, navigator)
     }
     if (pageContext.selectedElementState.value != null) {
@@ -298,8 +312,10 @@ fun PanelScreen(
                         .width(width = DETAILS_SCREEN_WIDTH.dp)
                         .background(Color.Green)
                         .fillMaxHeight(),
-                element = pageContext.selectedElementState.value!!
-        ) { element -> pageContext.changeElement(element) }
+                element = pageContext.selectedElementState.value!!,
+                deleter = pageContext::removeElement,
+                saver = pageContext::changeElement
+        )
     }
 }
 
@@ -333,25 +349,27 @@ private fun ControlPanel(contextPanel: PanelPageContext, navigator: (TabType, An
                         .height(32.dp)
                         .clickable { contextPanel.changeSelectedType(ElementType.LINE) }
         )
-        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Spacer(modifier = Modifier.width(20.dp))
         Button(onClick = contextPanel::undo) { Text(text = "Undo") }
-        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Spacer(modifier = Modifier.width(20.dp))
         Button(onClick = contextPanel::onCancel) { Text(text = "Cancel") }
-        Spacer(modifier = Modifier.wrapContentHeight().width(20.dp))
+        Spacer(modifier = Modifier.width(20.dp))
         Button(onClick = { contextPanel.calculate(navigator) }) { Text(text = "Calculate") }
+        Spacer(modifier = Modifier.width(20.dp))
+        Button(onClick = { contextPanel.dragableState.value = !contextPanel.dragableState.value }) { Text(text = "Calculate") }
     }
     Button(onClick = contextPanel::clear) { Text(text = "Clear") }
 }
 
 @Composable
-private fun ColumnScope.DrawArea(
+private fun DrawArea(
+        modifier: Modifier = Modifier,
         panelPageContext: PanelPageContext,
         onDetailInfoClicked: (Element) -> Unit
 ) = Canvas(
-        modifier = Modifier
+        modifier = modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .weight(1f)
                 .pointerMoveFilter(onMove = { panelPageContext.onMouseMoved(it) }, onEnter =  { true })
                 .tapGestureFilter { panelPageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
 ) {
@@ -359,3 +377,55 @@ private fun ColumnScope.DrawArea(
         it.onDraw(this)
     }
 }
+
+//{
+//    val columnScroll = rememberScrollState(0f)
+//    val rowScroll = rememberScrollState(0f)
+//    Column (modifier = modifier
+//            .fillMaxSize()
+//            .background(Color.Green)
+//            .horizontalScroll(state = columnScroll, enabled = true, reverseScrolling = true)
+//            .verticalScroll(state = rowScroll, enabled = true, reverseScrolling = true)
+//    ) {
+//        Row(modifier = Modifier.weight(1f)) {
+//            Canvas(
+//                    modifier = Modifier
+//                            .weight(1f)
+//                            .fillMaxSize()
+//                            .background(Color.White)
+//                            .pointerMoveFilter(onMove = { panelPageContext.onMouseMoved(it) }, onEnter =  { true })
+//                            .tapGestureFilter { panelPageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
+//            ) {
+//                panelPageContext.elementsState.value.forEach {
+//                    it.onDraw(this)
+//                }
+//            }
+//            VerticalScrollbar(adapter = object : ScrollbarAdapter {
+//                override val scrollOffset: Float
+//                    get() = columnScroll.value
+//
+//                override fun maxScrollOffset(containerSize: Int): Float {
+//                    return containerSize.toFloat()
+//                }
+//
+//                override suspend fun scrollTo(containerSize: Int, scrollOffset: Float) {
+//                    columnScroll.scrollTo(scrollOffset)
+//                }
+//
+//            }, modifier = Modifier)
+//        }
+//        HorizontalScrollbar(adapter = object : ScrollbarAdapter {
+//            override val scrollOffset: Float
+//                get() = rowScroll.value
+//
+//            override fun maxScrollOffset(containerSize: Int): Float {
+//                return containerSize.toFloat()
+//            }
+//
+//            override suspend fun scrollTo(containerSize: Int, scrollOffset: Float) {
+//                rowScroll.scrollTo(scrollOffset)
+//            }
+//
+//        })
+//    }
+//}

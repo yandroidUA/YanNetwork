@@ -79,7 +79,7 @@ private fun onErrIconClicked(message: String) {
             it.close()
         }
     }.show {
-        Box {
+        Box(modifier = Modifier.fillMaxSize()) {
             Text(message, modifier = Modifier
                     .align(alignment = Alignment.Center)
             )

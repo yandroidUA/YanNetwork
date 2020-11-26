@@ -43,8 +43,9 @@ data class AppState(
 @Composable
 private fun createEmptyPageContextState(): PanelPageContext {
     return PanelPageContext(
-            elementsState = remember { mutableStateOf(emptyList()) },
-            selectedElementState = remember { mutableStateOf(null) }
+            elementsState = mutableStateOf(emptyList()),
+            selectedElementState = mutableStateOf(null),
+            dragableState =  mutableStateOf(false)
     )
 }
 

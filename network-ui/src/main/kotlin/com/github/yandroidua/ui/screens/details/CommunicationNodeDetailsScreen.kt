@@ -11,7 +11,11 @@ import com.github.yandroidua.ui.elements.ElementCommunicationNode
 
 
 @Composable
-fun CommunicationNodeDetailsScreen(modifier: Modifier = Modifier, elementCommunicationNode: ElementCommunicationNode) = Column(modifier) {
+fun CommunicationNodeDetailsScreen(
+        modifier: Modifier = Modifier,
+        elementCommunicationNode: ElementCommunicationNode,
+        deleter: (ElementCommunicationNode) -> Unit
+) = Column(modifier) {
     Column(modifier = Modifier.weight(1f)) {
         Text(
                 text = "This is ElementCommunicationNode#${elementCommunicationNode.id}",
@@ -29,7 +33,7 @@ fun CommunicationNodeDetailsScreen(modifier: Modifier = Modifier, elementCommuni
         Spacer(modifier = Modifier.fillMaxWidth().height(20.dp))
         Button(onClick = {}) { Text("Test5") }
     }
-    Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
-        Text(text = "Save", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
+    Button(onClick = { deleter(elementCommunicationNode) }, modifier = Modifier.fillMaxWidth()) {
+        Text(text = "Delete", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
     }
 }

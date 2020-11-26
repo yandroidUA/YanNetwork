@@ -28,7 +28,12 @@ private data class Input(
 )
 
 @Composable
-fun LineDetails(modifier: Modifier = Modifier, elementLine: ElementLine, saver: (ElementLine) -> Unit) = Column(modifier) {
+fun LineDetails(
+        modifier: Modifier = Modifier,
+        elementLine: ElementLine,
+        deleter: (ElementLine) -> Unit,
+        saver: (ElementLine) -> Unit
+) = Column(modifier) {
     val inputState = remember { mutableStateOf(Input(weight = elementLine.weight.toString())) } //todo set line type to line
     val errorState = remember { mutableStateOf(LineDetailsErrorState()) }
     Column(modifier = Modifier.weight(1f)) {
@@ -79,7 +84,19 @@ fun LineDetails(modifier: Modifier = Modifier, elementLine: ElementLine, saver: 
         }
 
     }
-    Button(onClick = { checkInput(errorState, inputState.value, onValid = { saver(elementLine.copy(weight = it.weight.toInt())) }) }, modifier = Modifier.fillMaxWidth()) {
+    Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { deleter(elementLine) }
+    ) { Text(text = "Delete") }
+    Spacer(modifier = Modifier.height(height = 20.dp))
+    Button(
+            onClick = { checkInput(
+                    errorState,
+                    inputState.value,
+                    onValid = { saver(elementLine.copy(weight = it.weight.toInt())) }
+            ) },
+            modifier = Modifier.fillMaxWidth()
+    ) {
         Text(text = "Save", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
     }
 

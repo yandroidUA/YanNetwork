@@ -16,16 +16,24 @@ import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementWorkstation
 
 @Composable
-fun DetailsScreen(modifier: Modifier = Modifier, element: Element, saver: (Element) -> Unit) = Column(modifier.then(
+fun DetailsScreen(
+        modifier: Modifier = Modifier,
+        element: Element,
+        deleter: (Element) -> Unit,
+        saver: (Element) -> Unit
+) = Column(modifier.then(
         Modifier
                 .background(Color.White)
                 .border(width = 2.dp, color = Color.Black, shape = RectangleShape)
                 .padding(10.dp)
 )) {
     when (element.type) {
-        ElementType.WORKSTATION -> WorkstationDetails(elementWorkstation = element as ElementWorkstation)
-        ElementType.LINE -> LineDetails(elementLine = element as ElementLine) { saver(it) }
-        ElementType.COMMUNICATION_NODE -> CommunicationNodeDetailsScreen(elementCommunicationNode = element as ElementCommunicationNode)
+        ElementType.WORKSTATION -> WorkstationDetails(elementWorkstation = element as ElementWorkstation, deleter = deleter)
+        ElementType.LINE -> LineDetails(elementLine = element as ElementLine, deleter = deleter, saver = saver)
+        ElementType.COMMUNICATION_NODE -> CommunicationNodeDetailsScreen(
+                elementCommunicationNode = element as ElementCommunicationNode,
+                deleter = deleter
+        )
     }
 }
 

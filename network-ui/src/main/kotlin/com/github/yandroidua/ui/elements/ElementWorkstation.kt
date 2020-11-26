@@ -18,8 +18,8 @@ class ElementWorkstation(
         override val lineIds: MutableList<Int> = mutableListOf()
 ) : ImageControlElement(image = "workstation.png", offset), ConnectableElement {
 
-    override val height: Int = 32
-    override val width: Int = 32
+    override val height: Int = 24
+    override val width: Int = 24
 
     override val type: ElementType = ElementType.WORKSTATION
 

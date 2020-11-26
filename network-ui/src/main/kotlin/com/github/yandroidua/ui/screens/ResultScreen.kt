@@ -151,15 +151,15 @@ private fun Path(modifier: Modifier = Modifier, path: PathResultElements, steps:
             for (node in path.path) {
                 Canvas(modifier = Modifier.wrapContentHeight().width(width = 50.dp)) {
                     node.first.copy(startEndOffset = StartEndOffset(
-                            startPoint = Offset(0f, 32/2f),
-                            endPoint = Offset(50f, 32/2f)
+                            startPoint = Offset(0f, 24/2f),
+                            endPoint = Offset(50f, 24/2f)
                     )).onDraw(this)
                 }
                 Box {
                     Image(imageFromResource("workstation.png"),
                             modifier = Modifier
-                                    .width(32.dp)
-                                    .height(32.dp)
+                                    .width(24.dp)
+                                    .height(24.dp)
                     )
                     Text(
                             text = node.second.id.toString(),

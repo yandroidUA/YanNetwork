@@ -10,7 +10,11 @@ import androidx.compose.ui.unit.dp
 import com.github.yandroidua.ui.elements.ElementWorkstation
 
 @Composable
-fun WorkstationDetails(modifier: Modifier = Modifier, elementWorkstation: ElementWorkstation) = Column(modifier) {
+fun WorkstationDetails(
+        modifier: Modifier = Modifier,
+        elementWorkstation: ElementWorkstation,
+        deleter: (ElementWorkstation) -> Unit,
+) = Column(modifier) {
     Column(modifier = Modifier.weight(1f)) {
         Text(
                 text = "This is Workstation#${elementWorkstation.id}",
@@ -26,7 +30,7 @@ fun WorkstationDetails(modifier: Modifier = Modifier, elementWorkstation: Elemen
         Spacer(modifier = Modifier.fillMaxWidth().height(20.dp))
         Button(onClick = {}) { Text("Test4") }
     }
-    Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
-        Text(text = "Save", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
+    Button(onClick = { deleter(elementWorkstation) }, modifier = Modifier.fillMaxWidth()) {
+        Text(text = "Delete", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
     }
 }
