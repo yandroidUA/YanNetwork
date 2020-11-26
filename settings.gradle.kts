@@ -11,3 +11,4 @@ pluginManagement {
     }
 }
 include("network-dump")
+include("network-simulation")
