@@ -16,6 +16,7 @@ class Simulation(
 
     companion object {
         private const val LOGIC_ADDITIONAL_PACKAGES_COUNT = 2 //for connection
+        const val INFO_EMITS_PER_SEND = 1 // emits Before Event.SendPacketsEvent
     }
 
     private fun calculateInformationPackages(connection: SimulationConnection): Int {
@@ -54,7 +55,7 @@ class Simulation(
     }
 
     fun simulate(): Flow<Event> = flow {
-        emit(Event.TextEvent(text = "Simulation started"))
+//        emit(Event.TextEvent(text = "Simulation started"))
         val fromWorkstation: SimulationWorkstation? = models.find { it.id == (configuration.path?.from ?: it.id.minus(1)) } as? SimulationWorkstation
 
         if (fromWorkstation == null) {

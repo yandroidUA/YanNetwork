@@ -337,7 +337,9 @@ fun PanelScreen(
                 },
                 models = pageContext.elementsState.value.map { it.mapToSimulation() }
         )
-        val simulationState = simulation.simulate().drop(pageContext.dropValue).collectAsState(initial = Event.TextEvent(text = ""))
+        val simulationState = simulation.simulate().drop(
+                (Simulation.INFO_EMITS_PER_SEND + 1) * pageContext.dropValue
+        ).collectAsState(initial = Event.TextEvent(text = ""))
         SimulationScreen(
                 modifier = Modifier
                         .width(width = DETAILS_SCREEN_WIDTH.dp)
