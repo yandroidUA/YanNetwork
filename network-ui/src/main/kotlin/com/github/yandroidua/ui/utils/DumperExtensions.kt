@@ -65,7 +65,8 @@ fun ConfigDump.toApplicationState(): AppState {
             panelScreenContextPanel = PanelPageContext(
                     elementsState = mutableStateOf(elements),
                     selectedElementState = mutableStateOf(null),
-                    elementCounter = elements.size
+                    elementCounter = elements.size,
+                    reloadState = mutableStateOf(false)
             )
     )
 }

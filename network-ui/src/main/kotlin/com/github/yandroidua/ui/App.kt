@@ -44,7 +44,8 @@ data class AppState(
 private fun createEmptyPageContextState(): PanelPageContext {
     return PanelPageContext(
             elementsState = mutableStateOf(emptyList()),
-            selectedElementState = mutableStateOf(null)
+            selectedElementState = mutableStateOf(null),
+            reloadState = mutableStateOf(false)
     )
 }
 
@@ -128,8 +129,9 @@ private fun MainNavigator(navigationState: MutableState<Pair<TabType, Any?>>) {
             navigateTo(navigationState, tabType, argument)
         }
         TabType.RESULTS -> createResults(
-                arguments as? PathCalculationResult,
-                applicationState.panelScreenContextPanel?.elementsState?.value ?: emptyList()
+                results = arguments as? PathCalculationResult,
+                elements = applicationState.panelScreenContextPanel?.elementsState?.value ?: emptyList(),
+                navigationState = navigationState
         )
     }
 }
@@ -147,11 +149,18 @@ private fun createPanelScreen(
 @Composable
 private fun createResults(
         results: PathCalculationResult?,
-        elements: List<Element>
+        elements: List<Element>,
+        navigationState: MutableState<Pair<TabType, Any?>>,
 ) {
     val res = results ?: applicationState.results
     applicationState.results = res
-    ResultScreen(result = res, elements = elements)
+    ResultScreen(result = res, elements = elements) {
+        navigateTo(navigationState, TabType.PANEL,
+                applicationState.panelScreenContextPanel?.copy(pathToSimulate = it)?.also {
+                    applicationState.panelScreenContextPanel = it
+                }
+        )
+    }
 }
 
 @Composable

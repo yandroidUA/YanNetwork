@@ -5,8 +5,8 @@ fun buildConfiguration(builder: Configuration.() -> Unit): Configuration {
 }
 
 fun test() {
-    val config = buildConfiguration {
-        workstations = listOf()
-        connections = listOf()
-    }
+//    val config = buildConfiguration {
+//        workstations = listOf()
+//        connections = listOf()
+//    }
 }

@@ -12,6 +12,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -22,6 +23,9 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.imageFromResource
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.unit.dp
+import com.github.yandroidua.simulation.Simulation
+import com.github.yandroidua.simulation.buildConfiguration
+import com.github.yandroidua.simulation.models.Event
 import com.github.yandroidua.ui.MAIN_WINDOW_TITLE
 import com.github.yandroidua.ui.WIDTH
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
@@ -31,9 +35,13 @@ import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.elements.base.ImageControlElement
+import com.github.yandroidua.ui.mappers.mapToSimulation
 import com.github.yandroidua.ui.screens.details.DetailsScreen
+import com.github.yandroidua.ui.utils.PathResultElements
 import com.github.yandroidua.ui.utils.StartEndOffset
 import com.github.yandroidua.ui.utils.TabType
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.skip
 
 // ------------------------------------Constants------------------------------------------------------------------------
 
@@ -44,9 +52,12 @@ private const val DETAILS_SCREEN_WIDTH = 350
 data class PanelPageContext(
         val elementsState: MutableState<List<Element>>,
         val selectedElementState: MutableState<Element?>,
+        val reloadState: MutableState<Boolean>,
+        var dropValue: Int = 0,
         var elementCounter: Int = 0,
         var lineCreationLastTouchOffset: Offset? = null,
-        var selectedElementType: ElementType? = null /* represent type clicked from bottom control panel bar */
+        var selectedElementType: ElementType? = null, /* represent type clicked from bottom control panel bar */
+        var pathToSimulate: PathResultElements? = null
 )
 
 private fun PanelPageContext.changeSelectedType(type: ElementType) {
@@ -305,15 +316,43 @@ fun PanelScreen(
         DrawArea(Modifier.weight(1f), pageContext) { onDetailsShow(show = pageContext.selectedElementState.value != null) }
         ControlPanel(pageContext, navigator)
     }
-    if (pageContext.selectedElementState.value != null) {
+    if (pageContext.selectedElementState.value != null && pageContext.pathToSimulate == null) {
         DetailsScreen(
                 modifier = Modifier
                         .width(width = DETAILS_SCREEN_WIDTH.dp)
-                        .background(Color.Green)
                         .fillMaxHeight(),
                 element = pageContext.selectedElementState.value!!,
                 deleter = pageContext::removeElement,
                 saver = pageContext::changeElement
+        )
+    }
+    if (pageContext.pathToSimulate != null) {
+        println("Reload: ${pageContext.reloadState.value}")
+        val simulation = Simulation(
+                configuration = buildConfiguration {
+                    path = pageContext.pathToSimulate!!.mapToSimulation()
+                    infoPacketSize = 256
+                    sysPacketSize = 10
+                    size = 65536
+                },
+                models = pageContext.elementsState.value.map { it.mapToSimulation() }
+        )
+        val simulationState = simulation.simulate().drop(pageContext.dropValue).collectAsState(initial = Event.TextEvent(text = ""))
+        SimulationScreen(
+                modifier = Modifier
+                        .width(width = DETAILS_SCREEN_WIDTH.dp)
+                        .background(Color.Green)
+                        .fillMaxHeight(),
+                simulationState = simulationState,
+                path = pageContext.pathToSimulate!!,
+                onRestart = {
+                    pageContext.dropValue = 0
+                    pageContext.reloadState.value = !pageContext.reloadState.value
+                },
+                onStep = { step ->
+                    pageContext.dropValue = step
+                    pageContext.reloadState.value = !pageContext.reloadState.value
+                }
         )
     }
 }
@@ -374,55 +413,3 @@ private fun DrawArea(
         it.onDraw(this)
     }
 }
-
-//{
-//    val columnScroll = rememberScrollState(0f)
-//    val rowScroll = rememberScrollState(0f)
-//    Column (modifier = modifier
-//            .fillMaxSize()
-//            .background(Color.Green)
-//            .horizontalScroll(state = columnScroll, enabled = true, reverseScrolling = true)
-//            .verticalScroll(state = rowScroll, enabled = true, reverseScrolling = true)
-//    ) {
-//        Row(modifier = Modifier.weight(1f)) {
-//            Canvas(
-//                    modifier = Modifier
-//                            .weight(1f)
-//                            .fillMaxSize()
-//                            .background(Color.White)
-//                            .pointerMoveFilter(onMove = { panelPageContext.onMouseMoved(it) }, onEnter =  { true })
-//                            .tapGestureFilter { panelPageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
-//            ) {
-//                panelPageContext.elementsState.value.forEach {
-//                    it.onDraw(this)
-//                }
-//            }
-//            VerticalScrollbar(adapter = object : ScrollbarAdapter {
-//                override val scrollOffset: Float
-//                    get() = columnScroll.value
-//
-//                override fun maxScrollOffset(containerSize: Int): Float {
-//                    return containerSize.toFloat()
-//                }
-//
-//                override suspend fun scrollTo(containerSize: Int, scrollOffset: Float) {
-//                    columnScroll.scrollTo(scrollOffset)
-//                }
-//
-//            }, modifier = Modifier)
-//        }
-//        HorizontalScrollbar(adapter = object : ScrollbarAdapter {
-//            override val scrollOffset: Float
-//                get() = rowScroll.value
-//
-//            override fun maxScrollOffset(containerSize: Int): Float {
-//                return containerSize.toFloat()
-//            }
-//
-//            override suspend fun scrollTo(containerSize: Int, scrollOffset: Float) {
-//                rowScroll.scrollTo(scrollOffset)
-//            }
-//
-//        })
-//    }
-//}

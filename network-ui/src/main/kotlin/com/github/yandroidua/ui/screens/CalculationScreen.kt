@@ -58,7 +58,7 @@ fun CalculationWindow(
         lines: List<ElementLine>,
         onCalculated: (PathCalculationResult) -> Unit
 ) {
-    val window = AppWindow(size = IntSize(400, 300)).also {
+    val window = AppWindow(size = IntSize(600, 400)).also {
         it.keyboard.setShortcut(Key.Escape) {
             it.close()
         }
