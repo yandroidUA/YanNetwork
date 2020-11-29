@@ -49,10 +49,10 @@ private fun ResultsPathScreen(
             modifier = Modifier.weight(1f),
             scrollState = scrollState
     ) {
-        for ((index, path) in result.paths.withIndex()) {
+        for (path in result.paths) {
             Path(
                     path = path.mapToUiResult(elements),
-                    steps =  index % sqrt(result.paths.size.toDouble()).toInt() + 1,
+                    steps =  path.path.size,
                     onSendClicked = onSendClicked
             )
         }
@@ -119,7 +119,7 @@ modifier
         )
         Spacer(modifier = Modifier.height(1.dp).width(5.dp))
         Text(
-                text = steps.toString(),
+                text = maxOf(steps - 1, 0).toString(),
                 color = Color.Black,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
@@ -149,26 +149,14 @@ modifier
                 ),
                 scrollState = scrollState
         ) {
-            Box {
-                Image(imageFromResource("workstation.png"),
-                        modifier = Modifier
-                                .width(32.dp)
-                                .height(32.dp)
-                )
-                Text(
-                        text = path.from.id.toString(),
-                        color = Color.Red,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.align(alignment = Alignment.Center).padding(bottom = 5.dp)
-                )
-            }
-            for (node in path.path) {
-                Canvas(modifier = Modifier.wrapContentHeight().width(width = 50.dp)) {
-                    node.first.copy(startEndOffset = StartEndOffset(
-                            startPoint = Offset(0f, 32/2f),
-                            endPoint = Offset(50f, 32/2f)
-                    )).onDraw(this)
+            for ((index, node) in path.path.withIndex()) {
+                if (index != 0) {
+                    Canvas(modifier = Modifier.wrapContentHeight().width(width = 50.dp)) {
+                        node.first.copy(startEndOffset = StartEndOffset(
+                                startPoint = Offset(0f, 32 / 2f),
+                                endPoint = Offset(50f, 32 / 2f)
+                        )).onDraw(this)
+                    }
                 }
                 Box {
                     Image(imageFromResource("workstation.png"),
@@ -178,6 +166,22 @@ modifier
                     )
                     Text(
                             text = node.second.id.toString(),
+                            color = Color.Red,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.align(alignment = Alignment.Center).padding(bottom = 5.dp)
+                    )
+                }
+            }
+            if (path.path.isEmpty()) {
+                Box {
+                    Image(imageFromResource("workstation.png"),
+                            modifier = Modifier
+                                    .width(32.dp)
+                                    .height(32.dp)
+                    )
+                    Text(
+                            text = path.from.id.toString(),
                             color = Color.Red,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold,

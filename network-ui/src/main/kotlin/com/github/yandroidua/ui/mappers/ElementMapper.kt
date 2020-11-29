@@ -2,9 +2,8 @@ package com.github.yandroidua.ui.mappers
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import com.github.yandroidua.algorithm.Line
-import com.github.yandroidua.algorithm.LineType
-import com.github.yandroidua.algorithm.Workstation
+import com.github.yandroidua.algorithm.models.Line
+import com.github.yandroidua.algorithm.models.Workstation
 import com.github.yandroidua.dump.models.*
 import com.github.yandroidua.simulation.models.SimulationConnection
 import com.github.yandroidua.simulation.models.SimulationModel
@@ -76,9 +75,7 @@ fun ElementLine.mapToAlgorithmEntity(): Line = Line(
         id = id,
         station1Number = firstStationId,
         station2Number = secondStationId,
-        weight = weight,
-        type = LineType.DUPLEX, //todo change
-        errorChance = 0.0f //todo change
+        weight = weight
 )
 
 fun ElementLine.mapToSimulation(): SimulationConnection = SimulationConnection(

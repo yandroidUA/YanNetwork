@@ -1,6 +1,6 @@
 package com.github.yandroidua.ui.mappers
 
-import com.github.yandroidua.algorithm.PathResult
+import com.github.yandroidua.algorithm.models.PathResult
 import com.github.yandroidua.simulation.models.SimulationPath
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.base.ConnectableElement
