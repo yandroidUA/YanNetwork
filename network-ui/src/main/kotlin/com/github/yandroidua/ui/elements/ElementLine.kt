@@ -12,7 +12,10 @@ import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.utils.StartEndOffset
 import org.jetbrains.skija.Font
 import org.jetbrains.skija.Typeface
+import java.lang.Math.pow
 import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 data class ElementLine(
         override val id: Int,
@@ -62,14 +65,28 @@ data class ElementLine(
 
     override val type: ElementType = ElementType.LINE
 
-    override fun isInOffset(offset: Offset): Boolean {
+    fun nextOffset(xOffset: Float, currentTime: Int, time: Int, reverse: Boolean = true): Offset {
+        val distance = sqrt(
+                (startEndOffset.startPoint.x.toDouble() - startEndOffset.endPoint.x).pow(2.0) +
+                        (startEndOffset.startPoint.y.toDouble() - startEndOffset.endPoint.y).pow(2.0)
+        )
+        val currentX = xOffset + if (reverse) (distance * (1 - currentTime / time.toFloat())).toFloat() else (distance * currentTime / time).toFloat()
+        val currentY = f(currentX)
+        return Offset(currentX, currentY)
+    }
+
+    fun f(x: Float): Float {
         val xA = startEndOffset.startPoint.x
         val yA = startEndOffset.startPoint.y
         val xB = startEndOffset.endPoint.x
         val yB = startEndOffset.endPoint.y
+        return (((x * (yB - yA) - xA * yB + xA * yA + yA * xB - yA * xA)) / (xB - xA))
+    }
+
+    override fun isInOffset(offset: Offset): Boolean {
         val x = offset.x
         val y = offset.y
-        return abs(y - (((x * (yB - yA) - xA * yB + xA * yA + yA * xB - yA * xA)) / (xB - xA))) <= LINE_THRESHOLD
+        return abs(y - f(x)) <= LINE_THRESHOLD
                 && rect.contains(offset)
     }
 

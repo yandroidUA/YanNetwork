@@ -4,22 +4,28 @@ import androidx.compose.desktop.Window
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import com.github.yandroidua.dump.Dumper
+import com.github.yandroidua.simulation.Simulation
+import com.github.yandroidua.simulation.buildConfiguration
 import com.github.yandroidua.ui.components.PageTab
+import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.base.Element
+import com.github.yandroidua.ui.mappers.mapToSimulation
+import com.github.yandroidua.ui.mappers.mapToUiEvent
+import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.screens.*
 import com.github.yandroidua.ui.utils.PathCalculationResult
 import com.github.yandroidua.ui.utils.TabType
 import com.github.yandroidua.ui.utils.addToDumpElements
 import com.github.yandroidua.ui.utils.toApplicationState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 
 //-----------------------------------Constants--------------------------------------------------------------------------
 
@@ -44,7 +50,9 @@ data class AppState(
 private fun createEmptyPageContextState(): PanelPageContext {
     return PanelPageContext(
             elementsState = mutableStateOf(emptyList()),
-            selectedElementState = mutableStateOf(null)
+            selectedElementState = mutableStateOf(null),
+            reloadState = mutableStateOf(false),
+            messageState = mutableStateOf(null)
     )
 }
 
@@ -124,12 +132,15 @@ private fun MainNavigator(navigationState: MutableState<Pair<TabType, Any?>>) {
     val arguments = navigationState.value.second
     when (navigationState.value.first) {
         TabType.SETTINGS -> createSettings(applicationState.settingsState, navigationState)
-        TabType.PANEL -> createPanelScreen(arguments as? PanelPageContext) { tabType: TabType, argument: Any? ->
+        TabType.PANEL -> createPanelScreen(
+                panelPageContext = arguments as? PanelPageContext
+        ) { tabType: TabType, argument: Any? ->
             navigateTo(navigationState, tabType, argument)
         }
         TabType.RESULTS -> createResults(
-                arguments as? PathCalculationResult,
-                applicationState.panelScreenContextPanel?.elementsState?.value ?: emptyList()
+                results = arguments as? PathCalculationResult,
+                elements = applicationState.panelScreenContextPanel?.elementsState?.value ?: emptyList(),
+                navigationState = navigationState
         )
     }
 }
@@ -141,17 +152,30 @@ private fun createPanelScreen(
 ) {
     val pageContext = panelPageContext ?: createEmptyPageContextState()
     applicationState.panelScreenContextPanel = pageContext
-    PanelScreen(pageContext = pageContext, navigator = navigator)
+    PanelScreen(
+            pageContext = pageContext,
+            navigator = navigator,
+            onRestart = { pageContext.launchSimulation() }
+    )
 }
 
 @Composable
 private fun createResults(
         results: PathCalculationResult?,
-        elements: List<Element>
+        elements: List<Element>,
+        navigationState: MutableState<Pair<TabType, Any?>>,
 ) {
     val res = results ?: applicationState.results
     applicationState.results = res
-    ResultScreen(result = res, elements = elements)
+    ResultScreen(result = res, elements = elements) {
+        navigateTo(navigationState, TabType.PANEL,
+                applicationState.panelScreenContextPanel?.copy(
+                        pathToSimulate = it
+                )?.also {
+                    applicationState.panelScreenContextPanel = it
+                }
+        )
+    }
 }
 
 @Composable

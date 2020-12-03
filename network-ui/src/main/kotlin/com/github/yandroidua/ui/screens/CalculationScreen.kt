@@ -1,7 +1,7 @@
 package com.github.yandroidua.ui.screens
 
 import androidx.compose.desktop.AppWindow
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.DropdownMenu
@@ -16,9 +16,10 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.algorithm.BellmanFordAlgorithm
-import com.github.yandroidua.algorithm.Line
-import com.github.yandroidua.algorithm.Workstation
+import com.github.yandroidua.algorithm.models.Line
+import com.github.yandroidua.algorithm.models.Workstation
 import com.github.yandroidua.ui.elements.ElementLine
+import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.mappers.mapToAlgorithmEntity
 import com.github.yandroidua.ui.utils.PathCalculationResult
@@ -58,7 +59,7 @@ fun CalculationWindow(
         lines: List<ElementLine>,
         onCalculated: (PathCalculationResult) -> Unit
 ) {
-    val window = AppWindow(size = IntSize(400, 300)).also {
+    val window = AppWindow(size = IntSize(600, 400)).also {
         it.keyboard.setShortcut(Key.Escape) {
             it.close()
         }
@@ -81,10 +82,9 @@ fun CalculationWindow(
                                         .clickable { workstationFromDropDownState.value = true })
                             },
                             expanded = workstationFromDropDownState.value,
-                            onDismissRequest = { workstationFromDropDownState.value = false }
+                            onDismissRequest = { workstationFromDropDownState.value = false },
                     ) {
-                        //todo this must be fixed in further build of compose
-                        for (workstation in workstations) {
+                        for (workstation in workstations.filterIsInstance<ElementWorkstation>()) {
                             DropdownMenuItem(
                                     onClick = {
                                         errorFromState.value = false
@@ -94,47 +94,47 @@ fun CalculationWindow(
                             ) { Text(text = workstation.id.toString()) }
                         }
                     }
-                }
-                Row {
-                    Text(text = "To workstation:")
-                    Spacer(modifier = Modifier.height(1.dp).width(5.dp))
-                    DropdownMenu(
-                            toggleModifier = Modifier.wrapContentSize(),
-                            dropdownModifier = Modifier.wrapContentSize(),
-                            toggle = {
-                                Text(calcState.value.toWorkstation?.id?.toString() ?: "All", modifier = Modifier
-                                        .clickable { workstationToDropDownState.value = true })
-                            },
-                            expanded = workstationToDropDownState.value,
-                            onDismissRequest = { workstationToDropDownState.value = false }
-                    ) {
-                        //todo this must be fixed in further build of compose
-                        for (workstation in workstations) {
-                            DropdownMenuItem(
-                                    onClick = {
-                                        workstationToDropDownState.value = false
-                                        calcState.value = calcState.value.copy(toWorkstation = workstation)
-                                    }
-                            ) { Text(text = workstation.id.toString()) }
-                        }
+            }
+            Row {
+                Text(text = "To workstation:")
+                Spacer(modifier = Modifier.height(1.dp).width(5.dp))
+                DropdownMenu(
+                        toggleModifier = Modifier.wrapContentSize(),
+                        dropdownModifier = Modifier.wrapContentSize(),
+                        toggle = {
+                            Text(calcState.value.toWorkstation?.id?.toString() ?: "All", modifier = Modifier
+                                    .clickable { workstationToDropDownState.value = true })
+                        },
+                        expanded = workstationToDropDownState.value,
+                        onDismissRequest = { workstationToDropDownState.value = false }
+                ) {
+                    //todo this must be fixed in further build of compose
+                    for (workstation in workstations.filterIsInstance<ElementWorkstation>()) {
+                        DropdownMenuItem(
+                                onClick = {
+                                    workstationToDropDownState.value = false
+                                    calcState.value = calcState.value.copy(toWorkstation = workstation)
+                                }
+                        ) { Text(text = workstation.id.toString()) }
                     }
                 }
             }
-            Button(onClick = {
-                if (calcState.value.fromWorkstation == null) {
-                    errorFromState.value = true
-                } else {
-                    errorFromState.value = false
-                    onCalculated(onCalculateClicked(
-                            workstations = workstations.map { it.mapToAlgorithmEntity() },
-                            lines = lines.map { it.mapToAlgorithmEntity() },
-                            from = calcState.value.fromWorkstation!!.mapToAlgorithmEntity(),
-                            to = calcState.value.toWorkstation?.mapToAlgorithmEntity()
-                    ))
-                    window.close()
-                }
-
-            }, modifier = Modifier.fillMaxWidth()) { Text(text = "Calculate") }
         }
+        Button(onClick = {
+            if (calcState.value.fromWorkstation == null) {
+                errorFromState.value = true
+            } else {
+                errorFromState.value = false
+                onCalculated(onCalculateClicked(
+                        workstations = workstations.map { it.mapToAlgorithmEntity() },
+                        lines = lines.map { it.mapToAlgorithmEntity() },
+                        from = calcState.value.fromWorkstation!!.mapToAlgorithmEntity(),
+                        to = calcState.value.toWorkstation?.mapToAlgorithmEntity()
+                ))
+                window.close()
+            }
+
+        }, modifier = Modifier.fillMaxWidth()) { Text(text = "Calculate") }
     }
+}
 }

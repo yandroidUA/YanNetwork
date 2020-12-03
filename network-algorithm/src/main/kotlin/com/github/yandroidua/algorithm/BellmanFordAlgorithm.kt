@@ -1,73 +1,99 @@
 package com.github.yandroidua.algorithm
 
+import com.github.yandroidua.algorithm.models.Line
+import com.github.yandroidua.algorithm.models.PathHolder
+import com.github.yandroidua.algorithm.models.PathResult
+import com.github.yandroidua.algorithm.models.Workstation
+
 class BellmanFordAlgorithm(
         private val workstations: List<Workstation>,
         private val lines: List<Line>
 ) {
 
     fun calculate(from: Workstation, to: Workstation): List<PathResult> {
-        val k = workstations.size
-        val result = mutableListOf<PathResult>()
-        repeat(times = k - 1) { count ->
-            val info = getConnectionOr(from, to, count + 1)
-            result.add(PathResult(
-                    from = from.number,
-                    to = to.number,
-                    summary = info.first,
-                    path = info.second.asReversed()
-            ))
-        }
-        return result
+        return calculatePaths(from, to)
     }
 
     fun calculate(from: Workstation): List<PathResult> {
-        // count of stations
-        val k = workstations.size
-        // allocation [k][k-1] matrix, where k - for stations, and k-1 for path result from
-        val result = mutableListOf<PathResult>()
-        repeat(times = k) { index ->
-            repeat(times = k - 1) { count ->
-                val info = getConnectionOr(from = from, workstations[index], count + 1)
-                result.add(PathResult(
-                        from = from.number,
-                        to = workstations[index].number,
-                        summary = info.first,
-                        path = info.second.asReversed()
-                ))
-            }
-        }
-        return result
+        return calculatePaths(from)
     }
 
-    private fun getConnectionOr(
+    private fun calculatePaths(
             from: Workstation,
-            to: Workstation,
-            count: Int,
-            or: Int = Int.MAX_VALUE,
-    ): Pair<Int, List<Pair<Int, Int>>> {
-        if (from.number == to.number) return 0 to listOf()
-        if (count <= 0) return or to listOf()
-        return from.linesId
-                .asSequence()
-                .flatMap { lineId ->
-                    val line = lines.find { it.id == lineId } ?: return@flatMap listOf(null)
-                    listOf(
-                            workstations.find { it.number == line.station2Number }?.let { it to line },
-                            workstations.find { it.number == line.station1Number }?.let { it to line }
-                    )
+            wTo: Workstation? = null,
+            or: Int = Int.MAX_VALUE
+    ): List<PathResult> {
+        val distances = Array(workstations.size) {
+            PathHolder(workstationId = workstations[it].number, weight = or, path = emptyList())
+        }
+        distances.find { it.workstationId == from.number }?.weight = 0
+        repeat(workstations.size - 1) { repeat(lines.size) { lineIndex ->
+            val firstWorkStation = distances.find { it.workstationId == lines[lineIndex].station1Number }
+            val secondWorkStation = distances.find { it.workstationId == lines[lineIndex].station2Number }
+            val weight = lines[lineIndex].weight
+
+            if (firstWorkStation?.weight != or && (secondWorkStation?.weight ?: -1) > (firstWorkStation?.weight?.plus(weight) ?: -1)) {
+                secondWorkStation?.weight = firstWorkStation?.weight?.plus(weight) ?: -1
+            } else if (secondWorkStation?.weight != or && (firstWorkStation?.weight ?: -1) > (secondWorkStation?.weight?.plus(weight) ?: -1)) {
+                firstWorkStation?.weight = secondWorkStation?.weight?.plus(weight) ?: -1
+            }
+
+        } }
+
+        // get distance path
+        val analyzingDistances = if (wTo == null) distances else arrayOf(distances.find { it.workstationId == wTo.number }!!)
+        for (to in analyzingDistances) {
+            calculateMinPath(to, from, or, distances)
+        }
+
+        return analyzingDistances.map {
+            PathResult(from = from.number, to = it.workstationId, summary = it.weight, path = it.path)
+        }
+    }
+
+    private fun calculateMinPath(to: PathHolder, from: Workstation, or: Int, distances: Array<PathHolder>) {
+        var currentWorkstation = to.workstationId
+        val path = mutableListOf<Pair<Int, Int>>()
+        var summaryWeight = 0
+
+        while (currentWorkstation != from.number) {
+
+            for (workstation in workstations) {
+                if (currentWorkstation == from.number) {
+                    path.add(-1 to currentWorkstation)
+                    break
                 }
-                .filterNotNull() // remove all failure search
-                .map {
-                    val conn = getConnectionOr(from = it.first, to = to, count = count - 1, or = or)
-                    if (conn.first == or)
-                        conn
-                    else
-                        (conn.first + it.second.weight) to conn.second.toMutableList().apply {
-                            add(it.second.id to it.first.number)
-                        }
+                var connectionWeight = or
+                var mLineId = -1
+                // finding line that connect some workstation with currentWorkstation
+                for (lineId in workstation.linesId) {
+                    // finding line that connect to currentStation
+                    val line = lines.find { it.id == lineId } ?: continue
+                    if (line.station1Number == currentWorkstation
+                            || line.station2Number == currentWorkstation
+                    ) {
+                        connectionWeight = line.weight
+                        mLineId = line.id
+                        break
+                    }
                 }
-                .minByOrNull { it.first } // get min weight from all lines
-                ?: or to listOf() // if no way from to to default value will be returned
+                if (connectionWeight == or) continue
+                // get params of workstation that connect currentWorkstation
+                val workstationDistance = distances.find { it.workstationId == workstation.number } ?: continue
+
+                if (workstationDistance.weight + connectionWeight + summaryWeight == to.weight) {
+                    path.add(mLineId to currentWorkstation)
+                    currentWorkstation = workstation.number
+                    summaryWeight += connectionWeight
+                    if (currentWorkstation == from.number) {
+                        path.add(mLineId to currentWorkstation)
+                        break
+                    }
+                }
+
+            }
+        }
+        to.path = path.asReversed()
     }
 
 }

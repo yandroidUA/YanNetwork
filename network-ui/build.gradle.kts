@@ -2,7 +2,7 @@ import org.jetbrains.compose.compose
 
 plugins {
     kotlin("jvm") version "1.4.20"
-    id("org.jetbrains.compose") version "0.2.0-build128"
+    id("org.jetbrains.compose") version "0.2.0-build131"
     application
 }
 
@@ -19,6 +19,8 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(project(":network-algorithm"))
     implementation(project(":network-dump"))
+    implementation(project(":network-simulation"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
     implementation(compose.desktop.currentOs)
 }
 

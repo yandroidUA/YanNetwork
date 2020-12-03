@@ -1,6 +1,7 @@
 package com.github.yandroidua.ui.mappers
 
-import com.github.yandroidua.algorithm.PathResult
+import com.github.yandroidua.algorithm.models.PathResult
+import com.github.yandroidua.simulation.models.SimulationPath
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.elements.base.Element
@@ -15,4 +16,18 @@ fun PathResult.mapToUiResult(
             elements.find { it.id == oldP.first } as ElementLine to elements.find { it.id == oldP.second } as ConnectableElement
         },
         weight = summary
+)
+
+fun PathResult.mapToSimulation(): SimulationPath = SimulationPath(
+        from = from,
+        to = to,
+        summaryWeight = summary,
+        path = path
+)
+
+fun PathResultElements.mapToSimulation(): SimulationPath = SimulationPath(
+        from = from.id,
+        to = to.id,
+        summaryWeight = weight,
+        path = path.map { it.first.id to it.second.id }
 )

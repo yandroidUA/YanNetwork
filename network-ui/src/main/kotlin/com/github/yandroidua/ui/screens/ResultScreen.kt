@@ -4,6 +4,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,37 +24,51 @@ import com.github.yandroidua.ui.utils.StartEndOffset
 import kotlin.math.sqrt
 
 @Composable
-fun ResultScreen(modifier: Modifier = Modifier, elements: List<Element>, result: PathCalculationResult?) {
+fun ResultScreen(
+        modifier: Modifier = Modifier,
+        elements: List<Element>,
+        result: PathCalculationResult?,
+        onSendClicked: (PathResultElements) -> Unit
+) {
     if (result == null) {
         EmptyResultScreen(modifier)
         return
     }
-    ResultsPathScreen(modifier, elements, result)
+    ResultsPathScreen(modifier, elements, result, onSendClicked)
 }
 
 @Composable
-private fun ResultsPathScreen(modifier: Modifier, elements: List<Element>, result: PathCalculationResult) {
+private fun ResultsPathScreen(
+        modifier: Modifier,
+        elements: List<Element>,
+        result: PathCalculationResult,
+        onSendClicked: (PathResultElements) -> Unit
+) = Row(modifier) {
     val scrollState = rememberScrollState(0f)
-    ScrollableColumn(modifier = Modifier
-            .draggable(
-                    orientation = Orientation.Vertical,
-                    enabled = true,
-                    reverseDirection = true,
-                    canDrag = { true },
-                    startDragImmediately = true,
-                    onDrag = { scrollState.scrollBy(it) }
-            ),
-            scrollState = scrollState) {
-        for ((index, path) in result.paths.withIndex()) {
-            Path(path = path.mapToUiResult(elements), steps =  index % sqrt(result.paths.size.toDouble()).toInt() + 1)
+    ScrollableColumn(
+            modifier = Modifier.weight(1f),
+            scrollState = scrollState
+    ) {
+        for (path in result.paths) {
+            Path(
+                    path = path.mapToUiResult(elements),
+                    steps =  path.path.size,
+                    onSendClicked = onSendClicked
+            )
         }
     }
-
+    VerticalScrollbar(adapter = rememberScrollbarAdapter(scrollState))
 }
 
 @Composable
-private fun Path(modifier: Modifier = Modifier, path: PathResultElements, steps: Int) = Column(modifier =
-    modifier
+fun Path(
+        modifier: Modifier = Modifier,
+        path: PathResultElements,
+        steps: Int,
+        isSendEnabled: Boolean = true,
+        onSendClicked: (PathResultElements) -> Unit = {}
+) = Column(modifier =
+modifier
         .padding(all = 4.dp)
         .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(size = 5.dp))
         .padding(all = 4.dp)
@@ -69,11 +84,11 @@ private fun Path(modifier: Modifier = Modifier, path: PathResultElements, steps:
         )
         Text(text = " to workstation ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
         Text(
-            text = path.to.id.toString(),
-            color = Color.Red,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(alignment = Alignment.CenterVertically)
+                text = path.to.id.toString(),
+                color = Color.Red,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(alignment = Alignment.CenterVertically)
         )
     }
     Row {
@@ -93,7 +108,7 @@ private fun Path(modifier: Modifier = Modifier, path: PathResultElements, steps:
                 modifier = Modifier.align(alignment = Alignment.CenterVertically)
         )
     }
-    Spacer(modifier = Modifier.height(5.dp).width(1.dp))
+    Spacer(modifier = Modifier.height(5.dp))
     Row {
         Text(
                 text = "Steps:",
@@ -104,14 +119,14 @@ private fun Path(modifier: Modifier = Modifier, path: PathResultElements, steps:
         )
         Spacer(modifier = Modifier.height(1.dp).width(5.dp))
         Text(
-                text = steps.toString(),
+                text = maxOf(steps - 1, 0).toString(),
                 color = Color.Black,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(alignment = Alignment.CenterVertically)
         )
     }
-    Spacer(modifier = Modifier.height(5.dp).width(1.dp))
+    Spacer(modifier = Modifier.height(5.dp))
     Row {
         Text(
                 text = "Path:",
@@ -134,32 +149,20 @@ private fun Path(modifier: Modifier = Modifier, path: PathResultElements, steps:
                 ),
                 scrollState = scrollState
         ) {
-            Box {
-                Image(imageFromResource("workstation.png"),
-                        modifier = Modifier
-                                .width(32.dp)
-                                .height(32.dp)
-                )
-                Text(
-                        text = path.from.id.toString(),
-                        color = Color.Red,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.align(alignment = Alignment.Center).padding(bottom = 5.dp)
-                )
-            }
-            for (node in path.path) {
-                Canvas(modifier = Modifier.wrapContentHeight().width(width = 50.dp)) {
-                    node.first.copy(startEndOffset = StartEndOffset(
-                            startPoint = Offset(0f, 24/2f),
-                            endPoint = Offset(50f, 24/2f)
-                    )).onDraw(this)
+            for ((index, node) in path.path.withIndex()) {
+                if (index != 0) {
+                    Canvas(modifier = Modifier.wrapContentHeight().width(width = 50.dp)) {
+                        node.first.copy(startEndOffset = StartEndOffset(
+                                startPoint = Offset(0f, 32 / 2f),
+                                endPoint = Offset(50f, 32 / 2f)
+                        )).onDraw(this)
+                    }
                 }
                 Box {
                     Image(imageFromResource("workstation.png"),
                             modifier = Modifier
-                                    .width(24.dp)
-                                    .height(24.dp)
+                                    .width(32.dp)
+                                    .height(32.dp)
                     )
                     Text(
                             text = node.second.id.toString(),
@@ -170,7 +173,27 @@ private fun Path(modifier: Modifier = Modifier, path: PathResultElements, steps:
                     )
                 }
             }
+            if (path.path.isEmpty()) {
+                Box {
+                    Image(imageFromResource("workstation.png"),
+                            modifier = Modifier
+                                    .width(32.dp)
+                                    .height(32.dp)
+                    )
+                    Text(
+                            text = path.from.id.toString(),
+                            color = Color.Red,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.align(alignment = Alignment.Center).padding(bottom = 5.dp)
+                    )
+                }
+            }
         }
+    }
+    if (isSendEnabled) {
+        Spacer(modifier = Modifier.height(5.dp))
+        Button(onClick = { onSendClicked(path) }) { Text(text = "Send") }
     }
 }
 

@@ -1,4 +1,4 @@
-package com.github.yandroidua.algorithm
+package com.github.yandroidua.algorithm.models
 
 data class PathResult(
         val from: Int = -1,
