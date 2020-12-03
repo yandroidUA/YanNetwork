@@ -13,16 +13,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.simulation.models.Event
+import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.utils.PathResultElements
 
 @Composable
 fun SimulationScreen(
         modifier: Modifier = Modifier,
         path: PathResultElements,
-        simulationState: State<Event>,
+        simulationState: State<out SimulationResultModel?>,
+        updater: @Composable (SimulationResultModel) -> Unit,
         onRestart: () -> Unit,
         onStep: (Int) -> Unit
 ) {
+    simulationState.value?.let {
+        updater(it)
+    }
+
     Column(modifier
             .background(Color.White)
             .fillMaxSize()

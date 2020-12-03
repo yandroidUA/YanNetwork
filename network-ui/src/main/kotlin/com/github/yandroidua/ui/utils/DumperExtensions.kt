@@ -66,7 +66,8 @@ fun ConfigDump.toApplicationState(): AppState {
                     elementsState = mutableStateOf(elements),
                     selectedElementState = mutableStateOf(null),
                     elementCounter = elements.size,
-                    reloadState = mutableStateOf(false)
+                    reloadState = mutableStateOf(false),
+                    messageState = mutableStateOf(null)
             )
     )
 }

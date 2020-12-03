@@ -3,20 +3,15 @@ package com.github.yandroidua.ui.screens
 
 import androidx.compose.desktop.AppManager
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.ScrollableController
 import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Button
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.gesture.scrollorientationlocking.Orientation
+import androidx.compose.ui.geometry.lerp
 import androidx.compose.ui.gesture.tapGestureFilter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -31,17 +26,20 @@ import com.github.yandroidua.ui.WIDTH
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementWorkstation
+import com.github.yandroidua.ui.elements.ElementMessage
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.elements.base.ImageControlElement
 import com.github.yandroidua.ui.mappers.mapToSimulation
+import com.github.yandroidua.ui.mappers.mapToUiEvent
+import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.screens.details.DetailsScreen
 import com.github.yandroidua.ui.utils.PathResultElements
 import com.github.yandroidua.ui.utils.StartEndOffset
 import com.github.yandroidua.ui.utils.TabType
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.skip
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 // ------------------------------------Constants------------------------------------------------------------------------
 
@@ -49,19 +47,125 @@ private const val DETAILS_SCREEN_WIDTH = 350
 
 // ------------------------------------PanelPageContext-----------------------------------------------------------------
 
+data class MessageContext(
+        var id: Int,
+        val lineId: Int,
+        val fromId: Int,
+        val toId: Int
+)
+
 data class PanelPageContext(
         val elementsState: MutableState<List<Element>>,
         val selectedElementState: MutableState<Element?>,
         val reloadState: MutableState<Boolean>,
+        val messageState: MutableState<SimulationResultModel?>,
         var dropValue: Int = 0,
         var elementCounter: Int = 0,
+        var messageContext: MessageContext? = null,
         var lineCreationLastTouchOffset: Offset? = null,
         var selectedElementType: ElementType? = null, /* represent type clicked from bottom control panel bar */
-        var pathToSimulate: PathResultElements? = null
+        var pathToSimulate: PathResultElements? = null,
+        var simulationJob: Job? = null
 )
 
 private fun PanelPageContext.changeSelectedType(type: ElementType) {
     selectedElementType = type
+}
+
+//@Composable
+fun PanelPageContext.launchSimulation() {
+    if (pathToSimulate == null) return
+    deleteMessage()
+    simulationJob?.cancel()
+    simulationJob = GlobalScope.launch {
+        val simulation = Simulation(
+                configuration = buildConfiguration {
+                    path = pathToSimulate!!.mapToSimulation()
+                    infoPacketSize = 256
+                    sysPacketSize = 10
+                    size = 65536
+                },
+                models = elementsState.value.map { it.mapToSimulation() }.filterNotNull()
+        )
+        simulation.simulate()
+                .drop((Simulation.INFO_EMITS_PER_SEND + 1) * dropValue)
+                .map { it.mapToUiEvent() }
+                .flowOn(Dispatchers.Default)
+                .flatMapConcat { model ->
+                    when (model) {
+                        is SimulationResultModel.MessageStartModel -> flow {
+                            println("Sending")
+                            val id = elementCounter
+                            messageContext = MessageContext(
+                                    id = id,
+                                    toId = model.to,
+                                    lineId = model.by,
+                                    fromId = model.from
+                            )
+                            elementCounter++
+                            emit(model)
+                            val fromWorkstation = (elementsState.value.findLast { it.id == model.from })?.center ?: return@flow
+                            val toWorkstation = (elementsState.value.findLast { it.id == model.to })?.center ?: return@flow
+                            repeat(model.time.toInt()) {
+                                delay(1)
+                                val event = SimulationResultModel.MessageMoveModel(
+                                        model.from,
+                                        model.to,
+                                        model.by,
+                                        lerp(fromWorkstation, toWorkstation, it / model.time.toFloat()),
+                                        model.time
+                                )
+                                println("Fraction: ${it/model.time.toFloat()}")
+                                emit(event)
+                            }
+                        }
+                        else -> flowOf(model)
+                    }
+                }.collect {
+                    println("Collect: $it")
+                    onMessageChanged(it)
+                    messageState.value = it
+                }
+    }
+}
+
+fun PanelPageContext.onMessageChanged(event: SimulationResultModel) {
+    when (event) {
+        is SimulationResultModel.TextSimulationModel -> deleteMessage()
+        is SimulationResultModel.MessageStartModel -> createNewMessage(event)
+        is SimulationResultModel.MessageMoveModel -> moveMessage(event)
+        is SimulationResultModel.ErrorMessageModel -> deleteMessage()
+    }
+}
+
+private fun PanelPageContext.createNewMessage(event: SimulationResultModel.MessageStartModel) {
+    val fromWorkstation = elementsState.value.find { it.id == event.from } ?: return
+    // adding new Message to state
+    println("createNewMessage $event")
+    elementsState.value = elementsState.value.toMutableList().apply {
+        add(ElementMessage(messageContext!!.id, fromWorkstation.center))
+    }
+}
+
+private fun PanelPageContext.moveMessage(event: SimulationResultModel.MessageMoveModel) {
+    val msgContext = messageContext ?: return
+    val index = elementsState.value.indexOfFirst { it.type == ElementType.MESSAGE }
+    if (index == -1) {
+        println("not found")
+        return
+    }
+    println("moveMessage $event")
+    elementsState.value = elementsState.value.toMutableList().apply {
+        set(index, ElementMessage(msgContext.id, event.offset))
+    }
+}
+
+private fun PanelPageContext.deleteMessage() {
+    messageContext = null
+    val el = elementsState.value.find { it.type == ElementType.MESSAGE }
+    el?.let {
+        elementsState.value = elementsState.value.toMutableList().apply { remove(el) }
+    }
 }
 
 private fun PanelPageContext.onCanvasTyped(
@@ -123,6 +227,9 @@ private fun PanelPageContext.removeElement(element: Element) {
             val connectedLines = elementsState.value.filterIsInstance<ElementLine>()
                     .filter { it.firstStationId == element.id || it.secondStationId == element.id }
             connectedLines.forEach { removeElement(it) }
+            elementsState.value.toMutableList().apply { remove(element) }
+        }
+        ElementType.MESSAGE -> {
             elementsState.value.toMutableList().apply { remove(element) }
         }
     }
@@ -301,21 +408,28 @@ private fun checkInfoClick(
             onCommunicationNodeInfo(elementOnPosition as ElementCommunicationNode, onDetailInfoClicked)
             true
         } else false
+        ElementType.MESSAGE -> false //todo message info
     }
 }
 
 //---------------------------------UI-----------------------------------------------------------------------------------
-
+//pageContext.messageFlow!!.collectAsState(initial = SimulationResultModel.TextSimulationModel(""), Dispatchers.IO + Job()),
 @Composable
 fun PanelScreen(
         modifier: Modifier = Modifier,
         pageContext: PanelPageContext,
+        onRestart: () -> Unit,
         navigator: (TabType, Any?) -> Unit
 ) = Row(modifier) {
     Column(modifier = Modifier.weight(weight = 1f)) {
-        DrawArea(Modifier.weight(1f), pageContext) { onDetailsShow(show = pageContext.selectedElementState.value != null) }
+        DrawArea(Modifier.weight(1f), pageContext.elementsState, {pageContext.onMouseMoved(it)}) {
+            pageContext.onCanvasTyped(it) {
+                onDetailsShow(show = pageContext.selectedElementState.value != null)
+            }
+        }
         ControlPanel(pageContext, navigator)
     }
+
     if (pageContext.selectedElementState.value != null && pageContext.pathToSimulate == null) {
         DetailsScreen(
                 modifier = Modifier
@@ -327,34 +441,22 @@ fun PanelScreen(
         )
     }
     if (pageContext.pathToSimulate != null) {
-        println("Reload: ${pageContext.reloadState.value}")
-        val simulation = Simulation(
-                configuration = buildConfiguration {
-                    path = pageContext.pathToSimulate!!.mapToSimulation()
-                    infoPacketSize = 256
-                    sysPacketSize = 10
-                    size = 65536
-                },
-                models = pageContext.elementsState.value.map { it.mapToSimulation() }
-        )
-        val simulationState = simulation.simulate().drop(
-                (Simulation.INFO_EMITS_PER_SEND + 1) * pageContext.dropValue
-        ).collectAsState(initial = Event.TextEvent(text = ""))
         SimulationScreen(
                 modifier = Modifier
                         .width(width = DETAILS_SCREEN_WIDTH.dp)
                         .background(Color.Green)
                         .fillMaxHeight(),
-                simulationState = simulationState,
+                simulationState = pageContext.messageState,
                 path = pageContext.pathToSimulate!!,
                 onRestart = {
                     pageContext.dropValue = 0
-                    pageContext.reloadState.value = !pageContext.reloadState.value
+                    onRestart()
                 },
                 onStep = { step ->
                     pageContext.dropValue = step
-                    pageContext.reloadState.value = !pageContext.reloadState.value
-                }
+                    onRestart()
+                },
+                updater = {}
         )
     }
 }
@@ -402,16 +504,17 @@ private fun ControlPanel(contextPanel: PanelPageContext, navigator: (TabType, An
 @Composable
 private fun DrawArea(
         modifier: Modifier = Modifier,
-        panelPageContext: PanelPageContext,
-        onDetailInfoClicked: (Element) -> Unit
+        elementsState: MutableState<List<Element>>,
+        onPointerMove: (Offset) -> Boolean,
+        onTap: (Offset) -> Unit
 ) = Canvas(
         modifier = modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .pointerMoveFilter(onMove = { panelPageContext.onMouseMoved(it) }, onEnter =  { true })
-                .tapGestureFilter { panelPageContext.onCanvasTyped(position = it, onDetailInfoClicked) }
+                .pointerMoveFilter(onMove = onPointerMove, onEnter =  { true })
+                .tapGestureFilter { onTap(it) }
 ) {
-    panelPageContext.elementsState.value.forEach {
+    elementsState.value.forEach {
         it.onDraw(this)
     }
 }

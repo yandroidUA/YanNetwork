@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.imageFromResource
+import androidx.compose.ui.res.vectorXmlResource
 import androidx.compose.ui.unit.IntOffset
 
 abstract class ImageControlElement(

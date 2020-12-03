@@ -64,10 +64,11 @@ fun LineDump.mapToUiElement(): Element = ElementLine(
 
 //------------------------------------UI models-------------------------------------------------------------------------
 
-fun Element.mapToSimulation(): SimulationModel {
+fun Element.mapToSimulation(): SimulationModel? {
     return when(type) {
         ElementType.WORKSTATION, ElementType.COMMUNICATION_NODE -> (this as ConnectableElement).mapToSimulation()
         ElementType.LINE -> (this as ElementLine).mapToSimulation()
+        else -> null
     }
 }
 

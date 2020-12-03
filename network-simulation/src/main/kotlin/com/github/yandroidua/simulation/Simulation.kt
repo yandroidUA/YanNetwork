@@ -3,7 +3,6 @@ package com.github.yandroidua.simulation
 import com.github.yandroidua.simulation.models.*
 import com.github.yandroidua.simulation.models.packets.InformationPacket
 import com.github.yandroidua.simulation.models.packets.SystemInformationPacket
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
@@ -28,11 +27,8 @@ class Simulation(
                 ceil((1f + connection.errorChance) * configuration.size / configuration.sysPacketSize).toInt()
     }
 
-    /**
-     * Make delay due to [SimulationConnection.type]
-     */
-    private suspend fun makeDelay(connection: SimulationConnection) {
-        delay(1000)
+    private fun calculateDelay(connection: SimulationConnection): Long {
+        return 200
     }
 
     private suspend fun FlowCollector<Event>.panic(text: String) {
@@ -46,12 +42,17 @@ class Simulation(
     ) {
         emit(Event.TextEvent("Sending information packages from ${from.id} to ${to.id}"))
         val informationPackagesCount = calculateInformationPackages(by)
-        val systemInfPackaheCount = calculateSystemInformationPackages(by)
-        makeDelay(by)
-        emit(Event.SendPacketsEvent(packets = listOf(
-                InformationPacket(informationPackagesCount),
-                SystemInformationPacket(systemInfPackaheCount)
-        )))
+        val systemInfPackageCount = calculateSystemInformationPackages(by)
+        emit(Event.SendPacketsEvent(
+                packets = listOf(
+                        InformationPacket(informationPackagesCount),
+                        SystemInformationPacket(systemInfPackageCount)
+                ),
+                lineId = by.id,
+                fromStationId = from.id,
+                toStationId = to.id,
+                time = calculateDelay(by)
+        ))
     }
 
     fun simulate(): Flow<Event> = flow {
@@ -64,8 +65,8 @@ class Simulation(
         }
 
         var from: SimulationWorkstation = fromWorkstation
-        for (pathEntry in configuration.path?.path ?: emptyList()) {
-            println("A, size = ${configuration.path?.path?.size}")
+        for ((index, pathEntry) in (configuration.path?.path ?: emptyList()).withIndex()) {
+            if (index == 0) continue
             val connection = models.find { it.id == pathEntry.first } as? SimulationConnection
 
             if (connection == null) {

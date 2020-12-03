@@ -19,6 +19,7 @@ import com.github.yandroidua.algorithm.BellmanFordAlgorithm
 import com.github.yandroidua.algorithm.models.Line
 import com.github.yandroidua.algorithm.models.Workstation
 import com.github.yandroidua.ui.elements.ElementLine
+import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.mappers.mapToAlgorithmEntity
 import com.github.yandroidua.ui.utils.PathCalculationResult
@@ -70,7 +71,6 @@ fun CalculationWindow(
         val errorFromState = remember { mutableStateOf(false) }
         Column(modifier = Modifier.padding(10.dp)) {
             Column(modifier = Modifier.weight(1f)) {
-                val scrollState = rememberScrollState(0f)
                 Row {
                     Text(text = "From workstation:", color = if (errorFromState.value) Color.Red else Color.Black)
                     Spacer(modifier = Modifier.height(1.dp).width(5.dp))
@@ -84,7 +84,7 @@ fun CalculationWindow(
                             expanded = workstationFromDropDownState.value,
                             onDismissRequest = { workstationFromDropDownState.value = false },
                     ) {
-                        for (workstation in workstations.take(n = 10)) {
+                        for (workstation in workstations.filterIsInstance<ElementWorkstation>()) {
                             DropdownMenuItem(
                                     onClick = {
                                         errorFromState.value = false
@@ -109,7 +109,7 @@ fun CalculationWindow(
                         onDismissRequest = { workstationToDropDownState.value = false }
                 ) {
                     //todo this must be fixed in further build of compose
-                    for (workstation in workstations.take(n = 10)) {
+                    for (workstation in workstations.filterIsInstance<ElementWorkstation>()) {
                         DropdownMenuItem(
                                 onClick = {
                                     workstationToDropDownState.value = false
