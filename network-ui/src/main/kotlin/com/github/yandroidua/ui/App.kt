@@ -3,29 +3,22 @@ package com.github.yandroidua.ui
 import androidx.compose.desktop.Window
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import com.github.yandroidua.dump.Dumper
-import com.github.yandroidua.simulation.Simulation
-import com.github.yandroidua.simulation.buildConfiguration
 import com.github.yandroidua.ui.components.PageTab
-import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.base.Element
-import com.github.yandroidua.ui.mappers.mapToSimulation
-import com.github.yandroidua.ui.mappers.mapToUiEvent
-import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.screens.*
-import com.github.yandroidua.ui.utils.PathCalculationResult
-import com.github.yandroidua.ui.utils.TabType
+import com.github.yandroidua.ui.models.PathCalculationResult
+import com.github.yandroidua.ui.models.TabType
+import com.github.yandroidua.ui.screens.drawer.PanelPageContext
+import com.github.yandroidua.ui.screens.drawer.PanelScreen
+import com.github.yandroidua.ui.screens.drawer.launchSimulation
 import com.github.yandroidua.ui.utils.addToDumpElements
 import com.github.yandroidua.ui.utils.toApplicationState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
 
 //-----------------------------------Constants--------------------------------------------------------------------------
 

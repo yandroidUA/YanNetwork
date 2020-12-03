@@ -12,7 +12,7 @@ import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.mappers.mapToDump
 import com.github.yandroidua.ui.mappers.mapToUiElement
-import com.github.yandroidua.ui.screens.PanelPageContext
+import com.github.yandroidua.ui.screens.drawer.PanelPageContext
 
 fun Dumper.addToDump(workstation: ElementWorkstation): Dumper {
     return addToDump(workstation.mapToDump())

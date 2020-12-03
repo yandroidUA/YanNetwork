@@ -14,7 +14,7 @@ import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
-import com.github.yandroidua.ui.utils.StartEndOffset
+import com.github.yandroidua.ui.models.StartEndOffset
 
 //-----------------------------------Algorithm models-------------------------------------------------------------------
 

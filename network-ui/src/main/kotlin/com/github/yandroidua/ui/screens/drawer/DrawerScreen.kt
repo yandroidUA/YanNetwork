@@ -1,9 +1,8 @@
-package com.github.yandroidua.ui.screens
+package com.github.yandroidua.ui.screens.drawer
 
 
 import androidx.compose.desktop.AppManager
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -20,7 +19,6 @@ import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.simulation.Simulation
 import com.github.yandroidua.simulation.buildConfiguration
-import com.github.yandroidua.simulation.models.Event
 import com.github.yandroidua.ui.MAIN_WINDOW_TITLE
 import com.github.yandroidua.ui.WIDTH
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
@@ -35,9 +33,11 @@ import com.github.yandroidua.ui.mappers.mapToSimulation
 import com.github.yandroidua.ui.mappers.mapToUiEvent
 import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.screens.details.DetailsScreen
-import com.github.yandroidua.ui.utils.PathResultElements
-import com.github.yandroidua.ui.utils.StartEndOffset
-import com.github.yandroidua.ui.utils.TabType
+import com.github.yandroidua.ui.models.PathResultElements
+import com.github.yandroidua.ui.models.StartEndOffset
+import com.github.yandroidua.ui.models.TabType
+import com.github.yandroidua.ui.screens.CalculationWindow
+import com.github.yandroidua.ui.screens.SimulationScreen
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -47,12 +47,7 @@ private const val DETAILS_SCREEN_WIDTH = 350
 
 // ------------------------------------PanelPageContext-----------------------------------------------------------------
 
-data class MessageContext(
-        var id: Int,
-        val lineId: Int,
-        val fromId: Int,
-        val toId: Int
-)
+
 
 data class PanelPageContext(
         val elementsState: MutableState<List<Element>>,

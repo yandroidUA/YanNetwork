@@ -12,9 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
-import com.github.yandroidua.simulation.models.Event
 import com.github.yandroidua.ui.models.SimulationResultModel
-import com.github.yandroidua.ui.utils.PathResultElements
+import com.github.yandroidua.ui.models.PathResultElements
 
 @Composable
 fun SimulationScreen(

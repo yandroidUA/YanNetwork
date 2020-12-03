@@ -22,7 +22,7 @@ import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.mappers.mapToAlgorithmEntity
-import com.github.yandroidua.ui.utils.PathCalculationResult
+import com.github.yandroidua.ui.models.PathCalculationResult
 
 //--------------------------------CalculationState----------------------------------------------------------------------
 

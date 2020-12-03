@@ -1,4 +1,4 @@
-package com.github.yandroidua.ui.utils
+package com.github.yandroidua.ui.models
 
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.base.ConnectableElement

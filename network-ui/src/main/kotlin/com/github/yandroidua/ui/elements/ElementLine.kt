@@ -9,10 +9,9 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
-import com.github.yandroidua.ui.utils.StartEndOffset
+import com.github.yandroidua.ui.models.StartEndOffset
 import org.jetbrains.skija.Font
 import org.jetbrains.skija.Typeface
-import java.lang.Math.pow
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
