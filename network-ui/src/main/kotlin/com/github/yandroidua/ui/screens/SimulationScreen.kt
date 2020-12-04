@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,15 +20,11 @@ import com.github.yandroidua.ui.models.PathResultElements
 fun SimulationScreen(
         modifier: Modifier = Modifier,
         path: PathResultElements,
+        startState: MutableState<Boolean>,
         simulationState: State<out SimulationResultModel?>,
-        updater: @Composable (SimulationResultModel) -> Unit,
         onRestart: () -> Unit,
         onStep: (Int) -> Unit
 ) {
-    simulationState.value?.let {
-        updater(it)
-    }
-
     Column(modifier
             .background(Color.White)
             .fillMaxSize()
@@ -40,7 +37,7 @@ fun SimulationScreen(
         Spacer(modifier = Modifier.height(height = 10.dp))
         Button(onClick = { onStep(2) }) { Text(text = "Start 2") }
         Spacer(modifier = Modifier.height(height = 10.dp))
-        Button(onClick = { onRestart() }) { Text(text = "Restart") }
+        Button(onClick = { onRestart() }) { Text(text = if (startState.value) "Restart" else "Start") }
         Spacer(modifier = Modifier.height(height = 10.dp))
     }
 }

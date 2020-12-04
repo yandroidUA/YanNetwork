@@ -108,7 +108,6 @@ fun CalculationWindow(
                         expanded = workstationToDropDownState.value,
                         onDismissRequest = { workstationToDropDownState.value = false }
                 ) {
-                    //todo this must be fixed in further build of compose
                     for (workstation in workstations.filterIsInstance<ElementWorkstation>()) {
                         DropdownMenuItem(
                                 onClick = {

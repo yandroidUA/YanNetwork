@@ -14,6 +14,8 @@ sealed class Event {
             val packets: List<Packet>
     ) : Event()
 
+    object EndSimulationEvent: Event()
+
     data class ErrorEvent(val description: String) : Event()
 
 }

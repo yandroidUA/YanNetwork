@@ -29,8 +29,8 @@ fun SettingsScreen(
 ) = Column(modifier = modifier.padding(all = 8.dp).wrapContentSize()) {
     val loaderTrigger = remember { mutableStateOf(false) }
     Row {
-        Text(text = "D:\\Projects\\test.txt", modifier = Modifier.align(alignment = Alignment.CenterVertically))
-        Spacer(modifier = Modifier.width(width = 5.dp).height(1.dp))
+        Text(text = "Dump file:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+        Spacer(modifier = Modifier.width(width = 5.dp))
         EditText(
                 value = settingsState.dumpPathState.value,
                 onValueChange = { path -> settingsState.dumpPathState.value = path }

@@ -86,7 +86,7 @@ class Simulation(
             from = workstation
         }
 
-        emit(Event.TextEvent(text = "Simulation ended"))
+        emit(Event.EndSimulationEvent)
     }
 
 }
