@@ -13,6 +13,7 @@ data class SimulationContext(
     var mode: Mode = Mode.LOGICAL,
     var simulationJob: Job? = null,
     var simulationPath: PathResultElements? = null,
+    var currentStep: Int = 0,
     var simulationStartStep: Int = 0,
     var simulationStarted: Boolean = false
 )

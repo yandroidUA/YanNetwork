@@ -81,19 +81,20 @@ class DrawerContext(
       if (simulationContext.simulationPath == null) return
       simulationContext.simulationStartedState.value = true
       simulationContext.simulationJob = GlobalScope.launch {
-         val simulation = configureSimulation()
-         simulation.simulate()
-             .drop((Simulation.INFO_EMITS_PER_SEND + 1) * simulationContext.simulationStartStep)
-             .map { it.mapToUiEvent() }
-             .flowOn(Dispatchers.Default)
-             .flatMapConcat { event -> handleEvent(event) }
-             .collect { event ->
-                onMessageChanged(event)
-                messageState.value = event
-                if (event is SimulationResultModel.EndSimulation) {
-                   simulationContext.simulationStartedState.value = false
-                }
-             }
+         val events = configureSimulation().simulate().map { it.mapToUiEvent() }
+         for (event in events) {
+            messageState.value = event
+            when (event) {
+               is SimulationResultModel.MessageStartModel -> {
+                  handleSendEvent(event)
+                  simulationContext.currentStep++
+               }
+               SimulationResultModel.EndSimulation -> {
+                  simulationContext.simulationStartedState.value = false
+               }
+               else -> onMessageChanged(event)
+            }
+         }
       }
    }
 
@@ -162,7 +163,8 @@ class DrawerContext(
          ElementType.WORKSTATION -> onWorkstationCreate(position)
          ElementType.COMMUNICATION_NODE -> onCommunicationNodeCreate(position)
          ElementType.LINE -> onLineCreate(position)
-         ElementType.MESSAGE -> {}
+         ElementType.MESSAGE -> {
+         }
       }
    }
 
@@ -176,35 +178,29 @@ class DrawerContext(
       }
    }
 
-   private fun handleEvent(model: SimulationResultModel): Flow<SimulationResultModel> {
-      return when (model) {
-         is SimulationResultModel.MessageStartModel -> divideAndEmitSendingEvent(model)
-         else -> flowOf(model)
-      }
-   }
-
-   private fun divideAndEmitSendingEvent(
-       model: SimulationResultModel.MessageStartModel
-   ): Flow<SimulationResultModel> = flow {
+   private suspend fun handleSendEvent(model: SimulationResultModel.MessageStartModel) {
       messageContext = MessageContext(
           id = elementCounter.also { elementCounter++ },
           toId = model.to,
           lineId = model.by,
           fromId = model.from
       )
-      emit(model)
-      val fromWorkstation = (elementsState.value.find { it.id == model.from })?.center ?: return@flow
-      val toWorkstation = (elementsState.value.find { it.id == model.to })?.center ?: return@flow
+      onMessageChanged(model)
+      val fromWorkstation = (elementsState.value.find { it.id == model.from })?.center ?: return
+      val toWorkstation = (elementsState.value.find { it.id == model.to })?.center ?: return
       repeat(model.time.toInt()) {
          delay(1)
-         emit(SimulationResultModel.MessageMoveModel(
-             model.from,
-             model.to,
-             model.by,
-             lerp(fromWorkstation, toWorkstation, it / model.time.toFloat()),
-             model.time
-         ))
+         onMessageChanged(
+             SimulationResultModel.MessageMoveModel(
+                 model.from,
+                 model.to,
+                 model.by,
+                 lerp(fromWorkstation, toWorkstation, it / model.time.toFloat()),
+                 model.time
+             )
+         )
       }
+
    }
 
    private fun configureSimulation(): Simulation {
@@ -268,7 +264,7 @@ class DrawerContext(
       } else {
          // to prevent creating cycle workstation connection
          if (clickedItem.isInOffset(lineCreationLastTouchOffset!!)) return
-         endLineCreation(clickedItem, offset)
+         endLineCreation(clickedItem)
       }
    }
 
@@ -287,13 +283,13 @@ class DrawerContext(
       ))
    }
 
-   private fun endLineCreation(connectableElement: ConnectableElement, offset: Offset) {
+   private fun endLineCreation(connectableElement: ConnectableElement) {
       val creatingLineIndex = elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
       if (creatingLineIndex == -1) return
       elementsState.value = elementsState.value.toMutableList().apply {
          val newLine = (get(creatingLineIndex) as ElementLine).copy(
              state = ElementLine.State.CREATED,
-             startEndOffset =  StartEndOffset(
+             startEndOffset = StartEndOffset(
                  startPoint = lineCreationLastTouchOffset!!,
                  endPoint = connectableElement.center
              ),
@@ -315,7 +311,7 @@ class DrawerContext(
    private fun findElementOrNull(click: Offset): Element? {
       // firstly search in ImageControlElements (workstations, communicationNodes, messages)
       return elementsState.value.filterIsInstance<ConnectableElement>().find { it.isInOffset(click) }
-          // then search in all elements
+      // then search in all elements
           ?: elementsState.value.find { it.isInOffset(click) }
    }
 
@@ -344,7 +340,7 @@ class DrawerContext(
    }
 
    private fun removeCommunicationNode(communicationNode: ElementCommunicationNode) {
-     removeConnectableElement(communicationNode)
+      removeConnectableElement(communicationNode)
    }
 
    private fun removeConnectableElement(connectableElement: ConnectableElement) {

@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.DesktopCanvas
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import com.github.yandroidua.simulation.models.LineType
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.models.StartEndOffset
@@ -17,14 +18,15 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 data class ElementLine(
-        override val id: Int,
-        val startEndOffset: StartEndOffset,
-        val firstStationId: Int,
-        val secondStationId: Int,
-        val color: Color,
-        val state: State,
-        val weight: Int = 1,
-        val isInMovement: Boolean = false
+    override val id: Int,
+    val startEndOffset: StartEndOffset,
+    val firstStationId: Int,
+    val secondStationId: Int,
+    val color: Color,
+    val state: State,
+    val weight: Int = 1,
+    val lineType: LineType = LineType.DUPLEX,
+    val isInMovement: Boolean = false
 ) : Element {
 
     companion object {

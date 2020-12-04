@@ -2,8 +2,14 @@ package com.github.yandroidua.ui
 
 import androidx.compose.desktop.Window
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -11,14 +17,17 @@ import androidx.compose.ui.unit.IntSize
 import com.github.yandroidua.dump.Dumper
 import com.github.yandroidua.ui.components.PageTab
 import com.github.yandroidua.ui.elements.base.Element
-import com.github.yandroidua.ui.screens.*
 import com.github.yandroidua.ui.models.PathCalculationResult
 import com.github.yandroidua.ui.models.TabType
+import com.github.yandroidua.ui.screens.ResultScreen
+import com.github.yandroidua.ui.screens.SettingsScreen
+import com.github.yandroidua.ui.screens.SettingsState
 import com.github.yandroidua.ui.screens.drawer.DrawerContext
 import com.github.yandroidua.ui.screens.drawer.PanelScreen
 import com.github.yandroidua.ui.screens.drawer.SimulationContext
 import com.github.yandroidua.ui.utils.addToDumpElements
 import com.github.yandroidua.ui.utils.toApplicationState
+import kotlinx.coroutines.Dispatchers
 
 //-----------------------------------Constants--------------------------------------------------------------------------
 

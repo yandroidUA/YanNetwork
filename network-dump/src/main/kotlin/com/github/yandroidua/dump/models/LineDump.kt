@@ -12,5 +12,6 @@ data class LineDump(
         val color: ColorDump,
         val state: String,
         val weight: Int,
-        val isInMovement: Boolean
+        val isInMovement: Boolean,
+        val type: Int = 0
 )
