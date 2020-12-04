@@ -47,7 +47,6 @@ fun LineDetails(
         Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(align = Alignment.Top)) {
             Text(text = "Weight", modifier = Modifier.align(alignment = Alignment.CenterVertically))
             Spacer(modifier = Modifier.height(1.dp).width(5.dp))
-            //todo crash on empty input, my issue: https://github.com/JetBrains/compose-jb/issues/133
             EditText(
                     value = inputState.value.weight,
                     onValueChange = { weight ->
@@ -72,7 +71,6 @@ fun LineDetails(
                     expanded = inputState.value.dropDownExpanded,
                     onDismissRequest = { inputState.value = inputState.value.copy(dropDownExpanded = false) }
             ) {
-                //todo this must be fixed in further build of compose
                 for (lineType in LineType.values()) {
                     DropdownMenuItem(
                             onClick = {
@@ -106,7 +104,6 @@ private fun checkInput(errorState: MutableState<LineDetailsErrorState>, input: I
     var valid = true
     val lineError = checkWeight(input.weight)
     valid = valid and lineError.isNullOrBlank()
-    //todo other checks
     errorState.value = LineDetailsErrorState(weightErrorMessage = lineError)
     if (valid) {
         onValid(input)

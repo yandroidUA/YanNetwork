@@ -166,7 +166,7 @@ class DrawerContext(
       }
    }
 
-   fun onMessageChanged(event: SimulationResultModel) {
+   private fun onMessageChanged(event: SimulationResultModel) {
       when (event) {
          is SimulationResultModel.TextSimulationModel -> deleteMessage()
          is SimulationResultModel.MessageStartModel -> createNewMessage(event)

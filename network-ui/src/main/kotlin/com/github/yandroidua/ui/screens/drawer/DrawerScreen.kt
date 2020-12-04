@@ -22,7 +22,7 @@ import com.github.yandroidua.ui.WIDTH
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.models.TabType
-import com.github.yandroidua.ui.screens.CalculationWindow
+import com.github.yandroidua.ui.screens.calculation.CalculationWindow
 import com.github.yandroidua.ui.screens.SimulationScreen
 import com.github.yandroidua.ui.screens.details.DetailsScreen
 
@@ -48,7 +48,8 @@ private fun onDetailsShow(show: Boolean) {
 private fun calculate(context: DrawerContext, navigator: (TabType, Any?) -> Unit) {
    CalculationWindow(
        workstations = context.connectableElements,
-       lines = context.lines
+       lines = context.lines,
+       simulationContext = context.simulationContext
    ) { result -> navigator(TabType.RESULTS, result) }
 }
 
