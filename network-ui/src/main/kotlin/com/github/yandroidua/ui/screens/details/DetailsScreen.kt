@@ -34,6 +34,7 @@ fun DetailsScreen(
                 elementCommunicationNode = element as ElementCommunicationNode,
                 deleter = deleter
         )
+        else -> {}
     }
 }
 

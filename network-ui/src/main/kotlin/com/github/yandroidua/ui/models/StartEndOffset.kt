@@ -1,4 +1,4 @@
-package com.github.yandroidua.ui.utils
+package com.github.yandroidua.ui.models
 
 import androidx.compose.ui.geometry.Offset
 

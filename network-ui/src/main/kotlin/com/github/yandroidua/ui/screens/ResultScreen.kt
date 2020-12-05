@@ -18,10 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.mappers.mapToUiResult
-import com.github.yandroidua.ui.utils.PathCalculationResult
-import com.github.yandroidua.ui.utils.PathResultElements
-import com.github.yandroidua.ui.utils.StartEndOffset
-import kotlin.math.sqrt
+import com.github.yandroidua.ui.models.PathCalculationResult
+import com.github.yandroidua.ui.models.PathResultElements
+import com.github.yandroidua.ui.models.StartEndOffset
 
 @Composable
 fun ResultScreen(

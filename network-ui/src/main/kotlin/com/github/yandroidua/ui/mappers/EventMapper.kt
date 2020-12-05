@@ -1,6 +1,5 @@
 package com.github.yandroidua.ui.mappers
 
-import androidx.compose.ui.geometry.Offset
 import com.github.yandroidua.simulation.models.Event
 import com.github.yandroidua.ui.models.SimulationResultModel
 
@@ -21,5 +20,6 @@ fun Event.mapToUiEvent(): SimulationResultModel {
         is Event.TextEvent -> this.mapToUiEvent()
         is Event.SendPacketsEvent -> this.mapToUiEvent()
         is Event.ErrorEvent -> this.mapToUiEvent()
+        is Event.EndSimulationEvent -> SimulationResultModel.EndSimulation
     }
 }

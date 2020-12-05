@@ -5,7 +5,7 @@ import com.github.yandroidua.simulation.models.SimulationPath
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.elements.base.Element
-import com.github.yandroidua.ui.utils.PathResultElements
+import com.github.yandroidua.ui.models.PathResultElements
 
 fun PathResult.mapToUiResult(
         elements: List<Element>
