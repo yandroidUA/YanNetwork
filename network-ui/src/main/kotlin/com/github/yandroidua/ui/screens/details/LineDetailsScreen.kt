@@ -25,7 +25,7 @@ private data class LineDetailsErrorState(
 private data class Input(
     val weight: String = "",
     val dropDownExpanded: Boolean = false,
-    val lineType: LineType = LineType.DUPLEX
+    val lineType: LineType
 )
 
 @Composable
@@ -35,7 +35,7 @@ fun LineDetails(
     deleter: (ElementLine) -> Unit,
     saver: (ElementLine) -> Unit
 ) = Column(modifier) {
-   val inputState = remember { mutableStateOf(Input(weight = elementLine.weight.toString())) }
+   val inputState = remember { mutableStateOf(Input(weight = elementLine.weight.toString(), lineType = elementLine.lineType)) }
    val errorState = remember { mutableStateOf(LineDetailsErrorState()) }
    Column(modifier = Modifier.weight(1f)) {
       Text(
@@ -130,7 +130,7 @@ private fun checkWeight(weight: String): String? {
 private fun colorOfType(type: LineType): Color {
    return when (type) {
        LineType.DUPLEX -> Color.Black
-       LineType.HALF_DUPLEX -> Color.Blue
+       LineType.HALF_DUPLEX -> Color.Green
        LineType.SATELLITE -> Color.Red
    }
 }

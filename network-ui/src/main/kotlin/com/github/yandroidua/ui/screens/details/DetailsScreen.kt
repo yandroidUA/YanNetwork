@@ -17,25 +17,33 @@ import com.github.yandroidua.ui.elements.ElementWorkstation
 
 @Composable
 fun DetailsScreen(
-        modifier: Modifier = Modifier,
-        element: Element,
-        deleter: (Element) -> Unit,
-        saver: (Element) -> Unit
-) = Column(modifier.then(
-        Modifier
-                .background(Color.White)
-                .border(width = 2.dp, color = Color.Black, shape = RectangleShape)
-                .padding(10.dp)
-)) {
-    when (element.type) {
-        ElementType.WORKSTATION -> WorkstationDetails(elementWorkstation = element as ElementWorkstation, deleter = deleter)
-        ElementType.LINE -> LineDetails(elementLine = element as ElementLine, deleter = deleter, saver = saver)
-        ElementType.COMMUNICATION_NODE -> CommunicationNodeDetailsScreen(
-                elementCommunicationNode = element as ElementCommunicationNode,
-                deleter = deleter
-        )
-        else -> {}
-    }
+   modifier: Modifier = Modifier,
+   element: Element,
+   connections: List<Pair<Int, Pair<String, Int>>>,
+   deleter: (Element) -> Unit,
+   saver: (Element) -> Unit
+) = Column(
+   modifier.then(
+      Modifier
+         .background(Color.White)
+         .border(width = 2.dp, color = Color.Black, shape = RectangleShape)
+         .padding(10.dp)
+   )
+) {
+   when (element.type) {
+      ElementType.WORKSTATION -> WorkstationDetails(
+         elementWorkstation = element as ElementWorkstation,
+         deleter = deleter,
+         connections = connections
+      )
+      ElementType.LINE -> LineDetails(elementLine = element as ElementLine, deleter = deleter, saver = saver)
+      ElementType.COMMUNICATION_NODE -> CommunicationNodeDetailsScreen(
+         elementCommunicationNode = element as ElementCommunicationNode,
+         deleter = deleter,
+         connections = connections
+      )
+      else -> {}
+   }
 }
 
 

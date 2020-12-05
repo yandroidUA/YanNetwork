@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.lerp
 import androidx.compose.ui.graphics.Color
 import com.github.yandroidua.simulation.Simulation
 import com.github.yandroidua.simulation.buildConfiguration
+import com.github.yandroidua.simulation.models.LineType
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementMessage
@@ -22,6 +23,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import kotlin.random.Random
 
 class DrawerContext(
    /**
@@ -63,6 +65,10 @@ class DrawerContext(
    val simulationContext: SimulationContext
 ) {
 
+   companion object {
+      private val LINE_WEIGHTS = arrayOf(2, 3, 6, 7, 9, 10, 12, 16, 18, 21, 22, 30, 32)
+   }
+
    val lines: List<ElementLine>
       get() = elementsState.value.filterIsInstance<ElementLine>()
 
@@ -84,6 +90,7 @@ class DrawerContext(
       simulationContext.next = false
       val events = configureSimulation().simulate().map { it.mapToUiEvent() }
       simulationContext.simulationJob = GlobalScope.launch {
+         val startTime = System.currentTimeMillis()
          for (event in events) {
             messageState.value = event
             when (event) {
@@ -98,14 +105,9 @@ class DrawerContext(
                else -> onMessageChanged(event)
             }
          }
+         val endTime = System.currentTimeMillis()
+         println("Time: ${endTime - startTime}")
       }
-   }
-
-   private suspend fun checkStopAndNext() {
-      if (simulationContext.next) {
-         stop()
-      }
-      checkStoppingFlag()
    }
 
    fun stop() {
@@ -115,11 +117,6 @@ class DrawerContext(
    fun next() {
       simulationContext.next = true
       simulationContext.simulationStoppedState.value = false
-   }
-
-   private suspend fun checkStoppingFlag() = suspendCancellableCoroutine<Unit> {
-      while (simulationContext.simulationStoppedState.value) {}
-      it.resume(Unit)
    }
 
    fun resume() {
@@ -197,6 +194,38 @@ class DrawerContext(
          ElementType.MESSAGE -> {
          }
       }
+   }
+
+   fun findConnections(element: Element): List<Pair<Int, Pair<String, Int>>> {
+      return when (element.type) {
+         ElementType.WORKSTATION -> findConnectableElementConnections(element as ConnectableElement)
+         ElementType.COMMUNICATION_NODE -> findConnectableElementConnections(element as ConnectableElement)
+         ElementType.LINE -> emptyList()
+         ElementType.MESSAGE -> emptyList()
+      }
+   }
+
+   private fun findConnectableElementConnections(connectableElement: ConnectableElement): List<Pair<Int, Pair<String, Int>>> {
+      val conns = mutableListOf<Pair<Int, Pair<String, Int>>>()
+      for (lineId in connectableElement.lineIds) {
+         val line = elementsState.value.find { it.id == lineId } as? ElementLine ?: continue
+         val station = if (line.firstStationId == connectableElement.id) line.secondStationId else line.firstStationId
+         val element = elementsState.value.find { it.id == station } ?: continue
+         conns.add(lineId to (element.type.text to station))
+      }
+      return conns
+   }
+
+   private suspend fun checkStoppingFlag() = suspendCancellableCoroutine<Unit> {
+      while (simulationContext.simulationStoppedState.value) {}
+      it.resume(Unit)
+   }
+
+   private suspend fun checkStopAndNext() {
+      if (simulationContext.next) {
+         stop()
+      }
+      checkStoppingFlag()
    }
 
    private fun onMessageChanged(event: SimulationResultModel) {
@@ -300,6 +329,11 @@ class DrawerContext(
       }
    }
 
+   private fun getRandomLineWeight(): Int {
+      val random = Random(System.currentTimeMillis())
+      return LINE_WEIGHTS[random.nextInt(0, LINE_WEIGHTS.size)]
+   }
+
    private fun createNewLine(connectableElement: ConnectableElement, offset: Offset) {
       lineCreationLastTouchOffset = connectableElement.center
       addElement(
@@ -309,10 +343,13 @@ class DrawerContext(
                startPoint = connectableElement.center,
                endPoint = offset
             ),
+            weight = getRandomLineWeight(),
             color = Color.Black,
             state = ElementLine.State.CREATING,
             firstStationId = connectableElement.id,
-            secondStationId = -1
+            secondStationId = -1,
+            errorChance = 0f,
+            lineType = LineType.DUPLEX
          )
       )
    }
@@ -321,8 +358,10 @@ class DrawerContext(
       val creatingLineIndex =
          elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
       if (creatingLineIndex == -1) return
+      val line = elementsState.value[creatingLineIndex] as ElementLine
+//      if (line.firstStationId == connectableElement.id) return
       elementsState.value = elementsState.value.toMutableList().apply {
-         val newLine = (get(creatingLineIndex) as ElementLine).copy(
+         val newLine = line.copy(
             state = ElementLine.State.CREATED,
             startEndOffset = StartEndOffset(
                startPoint = lineCreationLastTouchOffset!!,

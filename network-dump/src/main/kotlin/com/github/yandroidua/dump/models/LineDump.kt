@@ -13,5 +13,6 @@ data class LineDump(
         val state: String,
         val weight: Int,
         val isInMovement: Boolean,
-        val type: Int = 0
+        val errorChance: Float,
+        val type: Int
 )

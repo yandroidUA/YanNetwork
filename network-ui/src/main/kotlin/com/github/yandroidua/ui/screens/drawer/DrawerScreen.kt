@@ -79,7 +79,8 @@ fun PanelScreen(
             .fillMaxHeight(),
          element = context.selectedElementState.value!!,
          deleter = context::removeElement,
-         saver = context::changeElement
+         saver = context::changeElement,
+         connections = context.findConnections(context.selectedElementState.value!!)
       )
    }
    if (context.simulationContext.simulationPath != null) {
@@ -146,14 +147,33 @@ private fun DrawArea(
    elementsState: MutableState<List<Element>>,
    onPointerMove: (Offset) -> Boolean,
    onTap: (Offset) -> Unit
-) = Canvas(
-   modifier = modifier
-      .fillMaxSize()
-      .background(Color.White)
-      .pointerMoveFilter(onMove = onPointerMove, onEnter = { true })
-      .tapGestureFilter { onTap(it) }
 ) {
-   elementsState.value.forEach {
-      it.onDraw(this)
+   val horizontalScrollState = rememberScrollState(0f)
+   val verticalScrollState = rememberScrollState(0f)
+   val hController = rememberScrollbarAdapter(horizontalScrollState)
+   val vController = rememberScrollbarAdapter(verticalScrollState)
+   Column(
+      modifier
+         .fillMaxSize()
+         .background(Color.White)
+   ) {
+      Row(modifier = modifier.weight(1f)) {
+         Canvas(
+            modifier = modifier
+               .verticalScroll(state = verticalScrollState, enabled = true)
+               .horizontalScroll(state = horizontalScrollState, enabled = true)
+               .width(width = 3420.dp)
+               .height(height = 1920.dp)
+               .background(Color.White)
+               .pointerMoveFilter(onMove = onPointerMove, onEnter = { true })
+               .tapGestureFilter { onTap(it) }
+         ) {
+            elementsState.value.forEach {
+               it.onDraw(this)
+            }
+         }
+         VerticalScrollbar(adapter = vController)
+      }
+      HorizontalScrollbar(adapter = hController)
    }
 }

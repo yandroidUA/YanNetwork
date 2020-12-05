@@ -17,24 +17,6 @@ import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.models.StartEndOffset
 
-//-----------------------------------Algorithm models-------------------------------------------------------------------
-
-fun Workstation.mapToUiElement(): ConnectableElement = ElementWorkstation(
-    id = number,
-    offset = Offset(0f, 0f),
-    lineIds = linesId.toMutableList()
-)
-
-fun Line.mapToUiElement(): Element = ElementLine(
-    id = id,
-    secondStationId = station2Number,
-    firstStationId = station1Number,
-    weight = weight,
-    startEndOffset = StartEndOffset(Offset(0f, 0f), Offset(0f, 0f)),
-    color = Color.Black, //todo map by type
-    state = ElementLine.State.CREATED
-)
-
 //------------------------------------Dump models-----------------------------------------------------------------------
 
 fun WorkstationDump.mapToUiElement(): ConnectableElement = ElementWorkstation(
@@ -51,7 +33,7 @@ fun CommunicationNodeDump.mapToUiElement(): ConnectableElement = ElementCommunic
 
 fun OffsetDump.mapToOffset(): Offset = Offset(x, y)
 
-fun ColorDump.mapToColor(): Color = Color(red, green, blue, 0xFF)
+fun ColorDump.mapToColor(): Color = Color(red, green, blue, alpha)
 
 fun LineDump.mapToUiElement(): Element = ElementLine(
     id = id,
@@ -61,6 +43,7 @@ fun LineDump.mapToUiElement(): Element = ElementLine(
     startEndOffset = StartEndOffset(startOffset.mapToOffset(), endOffset.mapToOffset()),
     color = color.mapToColor(),
     lineType = LineType.fromId(type) ?: LineType.DUPLEX,
+    errorChance = errorChance,
     state = ElementLine.State.valueOf(state)
 )
 
@@ -85,9 +68,9 @@ fun ElementLine.mapToSimulation(): SimulationConnection = SimulationConnection(
     id = id,
     workstation1Id = firstStationId,
     workstation2Id = secondStationId,
-    type = com.github.yandroidua.simulation.models.LineType.DUPLEX, //todo change
+    type = lineType,
     weight = weight,
-    errorChance = 0f //todo change
+    errorChance = errorChance
 )
 
 fun ConnectableElement.mapToSimulation(): SimulationWorkstation = SimulationWorkstation(
@@ -102,7 +85,7 @@ fun ConnectableElement.mapToAlgorithmEntity(): Workstation = Workstation(
 
 fun Offset.mapToDump(): OffsetDump = OffsetDump(x, y)
 
-fun Color.mapToDump(): ColorDump = ColorDump(red.toInt(), green.toInt(), blue.toInt(), alpha.toInt())
+fun Color.mapToDump(): ColorDump = ColorDump(red, green, blue, alpha)
 
 fun ElementWorkstation.mapToDump(): WorkstationDump = WorkstationDump(
     id = id,
@@ -126,5 +109,6 @@ fun ElementLine.mapToDump(): LineDump = LineDump(
     color = color.mapToDump(),
     state = state.name,
     type = lineType.id,
+    errorChance = errorChance,
     isInMovement = isInMovement
 )

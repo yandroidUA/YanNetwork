@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ColorDump(
-        val red: Int,
-        val green: Int,
-        val blue: Int,
-        val alpha: Int
+        val red: Float,
+        val green: Float,
+        val blue: Float,
+        val alpha: Float
 )

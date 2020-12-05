@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.yandroidua.ui.elements.base.Element
+import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.mappers.mapToUiResult
 import com.github.yandroidua.ui.models.PathCalculationResult
 import com.github.yandroidua.ui.models.PathResultElements
@@ -158,7 +159,7 @@ modifier
                     }
                 }
                 Box {
-                    Image(imageFromResource("workstation.png"),
+                    Image(imageFromResource(if (node.second.type == ElementType.COMMUNICATION_NODE) "communication_node.png" else "workstation.png"),
                             modifier = Modifier
                                     .width(32.dp)
                                     .height(32.dp)
