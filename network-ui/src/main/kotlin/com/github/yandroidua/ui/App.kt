@@ -54,7 +54,10 @@ private fun createEmptyDrawerContext(): DrawerContext {
        elementsState = mutableStateOf(emptyList()),
        selectedElementState = mutableStateOf(null),
        messageState = mutableStateOf(null),
-       simulationContext = SimulationContext(simulationStartedState = mutableStateOf(false))
+       simulationContext = SimulationContext(
+          simulationStartedState = mutableStateOf(false),
+          simulationStoppedState = mutableStateOf(false)
+       )
    )
 }
 

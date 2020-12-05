@@ -15,7 +15,7 @@ class Simulation(
 
    companion object {
       private const val LOGIC_ADDITIONAL_PACKAGES_COUNT = 2 //for connection
-      const val INFO_EMITS_PER_SEND = 1 // emits Before Event.SendPacketsEvent
+//      const val INFO_EMITS_PER_SEND = 1 // emits Before Event.SendPacketsEvent
    }
 
    private fun calculateInformationPackages(connection: SimulationConnection): Int {
@@ -45,7 +45,7 @@ class Simulation(
        to: SimulationWorkstation,
        by: SimulationConnection
    ) {
-      events.add(Event.TextEvent("Sending information packages from ${from.id} to ${to.id}"))
+//      events.add(Event.TextEvent("Sending information packages from ${from.id} to ${to.id}"))
       val informationPackagesCount = calculateInformationPackages(by)
       val systemInfPackageCount = calculateSystemInformationPackages(by)
        events.add(Event.SendPacketsEvent(

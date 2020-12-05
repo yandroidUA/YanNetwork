@@ -6,8 +6,6 @@ import androidx.compose.ui.geometry.lerp
 import androidx.compose.ui.graphics.Color
 import com.github.yandroidua.simulation.Simulation
 import com.github.yandroidua.simulation.buildConfiguration
-import com.github.yandroidua.simulation.models.Event
-import com.github.yandroidua.simulation.models.SimulationPath
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementMessage
@@ -17,50 +15,52 @@ import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.mappers.mapToSimulation
 import com.github.yandroidua.ui.mappers.mapToUiEvent
-import com.github.yandroidua.ui.models.PathResultElements
 import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.models.StartEndOffset
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 class DrawerContext(
-    /**
-     * Contains of elements that draws on Canvas
-     */
-    val elementsState: MutableState<List<Element>>,
-    /**
-     * Contains selected element
-     *
-     * used to select in Panel and when tap draw in to canvas also in details screens
-     */
-    val selectedElementState: MutableState<Element?>,
-    /**
-     * Contains simulation messages
-     */
-    val messageState: MutableState<SimulationResultModel?>,
-    /**
-     * Contains element's count, used for ID for new element
-     */
-    var elementCounter: Int = 0,
-    /**
-     * Contains information about message
-     * fill during simulation
-     */
-    var messageContext: MessageContext? = null,
-    /**
-     * Contains last touch Offset value
-     * used to display movement of new line
-     */
-    var lineCreationLastTouchOffset: Offset? = null,
-    /**
-     * Hold selected type
-     * used to create new elements and to open details
-     */
-    var selectedElementType: ElementType? = null,
-    /**
-     * Contains info for simulation
-     */
-    val simulationContext: SimulationContext
+   /**
+    * Contains of elements that draws on Canvas
+    */
+   val elementsState: MutableState<List<Element>>,
+   /**
+    * Contains selected element
+    *
+    * used to select in Panel and when tap draw in to canvas also in details screens
+    */
+   val selectedElementState: MutableState<Element?>,
+   /**
+    * Contains simulation messages
+    */
+   val messageState: MutableState<SimulationResultModel?>,
+   /**
+    * Contains element's count, used for ID for new element
+    */
+   var elementCounter: Int = 0,
+   /**
+    * Contains information about message
+    * fill during simulation
+    */
+   var messageContext: MessageContext? = null,
+   /**
+    * Contains last touch Offset value
+    * used to display movement of new line
+    */
+   var lineCreationLastTouchOffset: Offset? = null,
+   /**
+    * Hold selected type
+    * used to create new elements and to open details
+    */
+   var selectedElementType: ElementType? = null,
+   /**
+    * Contains info for simulation
+    */
+   val simulationContext: SimulationContext
 ) {
 
    val lines: List<ElementLine>
@@ -80,14 +80,17 @@ class DrawerContext(
       deleteMessage()
       if (simulationContext.simulationPath == null) return
       simulationContext.simulationStartedState.value = true
+      simulationContext.simulationStoppedState.value = false
+      simulationContext.next = false
+      val events = configureSimulation().simulate().map { it.mapToUiEvent() }
       simulationContext.simulationJob = GlobalScope.launch {
-         val events = configureSimulation().simulate().map { it.mapToUiEvent() }
          for (event in events) {
             messageState.value = event
             when (event) {
                is SimulationResultModel.MessageStartModel -> {
                   handleSendEvent(event)
-                  simulationContext.currentStep++
+                  checkStopAndNext()
+                  deleteMessage()
                }
                SimulationResultModel.EndSimulation -> {
                   simulationContext.simulationStartedState.value = false
@@ -96,6 +99,32 @@ class DrawerContext(
             }
          }
       }
+   }
+
+   private suspend fun checkStopAndNext() {
+      if (simulationContext.next) {
+         stop()
+      }
+      checkStoppingFlag()
+   }
+
+   fun stop() {
+      simulationContext.simulationStoppedState.value = true
+   }
+
+   fun next() {
+      simulationContext.next = true
+      simulationContext.simulationStoppedState.value = false
+   }
+
+   private suspend fun checkStoppingFlag() = suspendCancellableCoroutine<Unit> {
+      while (simulationContext.simulationStoppedState.value) {}
+      it.resume(Unit)
+   }
+
+   fun resume() {
+      simulationContext.next = false
+      simulationContext.simulationStoppedState.value = false
    }
 
    fun undo() {
@@ -109,7 +138,8 @@ class DrawerContext(
       selectedElementType = null
       lineCreationLastTouchOffset = null
       selectedElementState.value = null
-      val indexOfActiveLine = elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
+      val indexOfActiveLine =
+         elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
       if (indexOfActiveLine != -1) {
          elementsState.value = elementsState.value.toMutableList().apply { removeAt(indexOfActiveLine) }
       }
@@ -145,11 +175,12 @@ class DrawerContext(
    fun onMouseMoved(offset: Offset): Boolean {
       // event need to be handled only for LINE
       if (selectedElementType != ElementType.LINE) return false
-      val creatingLineIndex = elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
+      val creatingLineIndex =
+         elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
       if (creatingLineIndex == -1) return false
       val line = (elementsState.value.getOrNull(creatingLineIndex) as? ElementLine) ?: return false
       changeElement(
-          element = line.copy(startEndOffset = line.startEndOffset.copy(endPoint = offset), isInMovement = true)
+         element = line.copy(startEndOffset = line.startEndOffset.copy(endPoint = offset), isInMovement = true)
       )
       return true
    }
@@ -180,10 +211,10 @@ class DrawerContext(
 
    private suspend fun handleSendEvent(model: SimulationResultModel.MessageStartModel) {
       messageContext = MessageContext(
-          id = elementCounter.also { elementCounter++ },
-          toId = model.to,
-          lineId = model.by,
-          fromId = model.from
+         id = elementCounter.also { elementCounter++ },
+         toId = model.to,
+         lineId = model.by,
+         fromId = model.from
       )
       onMessageChanged(model)
       val fromWorkstation = (elementsState.value.find { it.id == model.from })?.center ?: return
@@ -191,27 +222,28 @@ class DrawerContext(
       repeat(model.time.toInt()) {
          delay(1)
          onMessageChanged(
-             SimulationResultModel.MessageMoveModel(
-                 model.from,
-                 model.to,
-                 model.by,
-                 lerp(fromWorkstation, toWorkstation, it / model.time.toFloat()),
-                 model.time
-             )
+            SimulationResultModel.MessageMoveModel(
+               model.from,
+               model.to,
+               model.by,
+               lerp(fromWorkstation, toWorkstation, it / model.time.toFloat()),
+               model.time
+            )
          )
+         checkStoppingFlag()
       }
 
    }
 
    private fun configureSimulation(): Simulation {
       return Simulation(
-          configuration = buildConfiguration {
-             path = simulationContext.simulationPath!!.mapToSimulation()
-             infoPacketSize = simulationContext.infoPacketSize
-             sysPacketSize = simulationContext.sysPacketSize
-             size = simulationContext.size
-          },
-          models = elementsState.value.mapNotNull { it.mapToSimulation() }
+         configuration = buildConfiguration {
+            path = simulationContext.simulationPath!!.mapToSimulation()
+            infoPacketSize = simulationContext.infoPacketSize
+            sysPacketSize = simulationContext.sysPacketSize
+            size = simulationContext.size
+         },
+         models = elementsState.value.mapNotNull { it.mapToSimulation() }
       )
    }
 
@@ -270,31 +302,34 @@ class DrawerContext(
 
    private fun createNewLine(connectableElement: ConnectableElement, offset: Offset) {
       lineCreationLastTouchOffset = connectableElement.center
-      addElement(element = ElementLine(
-          id = elementCounter.also { elementCounter++ },
-          startEndOffset = StartEndOffset(
-              startPoint = connectableElement.center,
-              endPoint = offset
-          ),
-          color = Color.Black,
-          state = ElementLine.State.CREATING,
-          firstStationId = connectableElement.id,
-          secondStationId = -1
-      ))
+      addElement(
+         element = ElementLine(
+            id = elementCounter.also { elementCounter++ },
+            startEndOffset = StartEndOffset(
+               startPoint = connectableElement.center,
+               endPoint = offset
+            ),
+            color = Color.Black,
+            state = ElementLine.State.CREATING,
+            firstStationId = connectableElement.id,
+            secondStationId = -1
+         )
+      )
    }
 
    private fun endLineCreation(connectableElement: ConnectableElement) {
-      val creatingLineIndex = elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
+      val creatingLineIndex =
+         elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
       if (creatingLineIndex == -1) return
       elementsState.value = elementsState.value.toMutableList().apply {
          val newLine = (get(creatingLineIndex) as ElementLine).copy(
-             state = ElementLine.State.CREATED,
-             startEndOffset = StartEndOffset(
-                 startPoint = lineCreationLastTouchOffset!!,
-                 endPoint = connectableElement.center
-             ),
-             secondStationId = connectableElement.id,
-             isInMovement = false
+            state = ElementLine.State.CREATED,
+            startEndOffset = StartEndOffset(
+               startPoint = lineCreationLastTouchOffset!!,
+               endPoint = connectableElement.center
+            ),
+            secondStationId = connectableElement.id,
+            isInMovement = false
          )
          set(creatingLineIndex, newLine)
          (elementsState.value.find { it.id == newLine.firstStationId } as? ConnectableElement)?.lineIds?.add(newLine.id)
@@ -312,7 +347,7 @@ class DrawerContext(
       // firstly search in ImageControlElements (workstations, communicationNodes, messages)
       return elementsState.value.filterIsInstance<ConnectableElement>().find { it.isInOffset(click) }
       // then search in all elements
-          ?: elementsState.value.find { it.isInOffset(click) }
+         ?: elementsState.value.find { it.isInOffset(click) }
    }
 
    private fun onTypedOnElement(position: Offset, onElementDetected: (Element) -> Unit): Boolean {
@@ -353,8 +388,12 @@ class DrawerContext(
 
    private fun removeLine(elementLine: ElementLine) {
       // searching connectable elements that connected to this line
-      (elementsState.value.find { it.id == elementLine.firstStationId } as? ConnectableElement)?.lineIds?.remove(elementLine.id)
-      (elementsState.value.find { it.id == elementLine.secondStationId } as? ConnectableElement)?.lineIds?.remove(elementLine.id)
+      (elementsState.value.find { it.id == elementLine.firstStationId } as? ConnectableElement)?.lineIds?.remove(
+         elementLine.id
+      )
+      (elementsState.value.find { it.id == elementLine.secondStationId } as? ConnectableElement)?.lineIds?.remove(
+         elementLine.id
+      )
       elementsState.value = elementsState.value.toMutableList().apply { remove(elementLine) }
    }
 

@@ -68,7 +68,10 @@ fun ConfigDump.toApplicationState(): AppState {
            selectedElementState = mutableStateOf(null),
            elementCounter = elements.size,
            messageState = mutableStateOf(null),
-           simulationContext = SimulationContext(simulationStartedState = mutableStateOf(false))
+           simulationContext = SimulationContext(
+              simulationStartedState = mutableStateOf(false),
+              simulationStoppedState = mutableStateOf(false)
+           )
        )
    )
 }
