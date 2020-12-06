@@ -19,43 +19,53 @@ import com.github.yandroidua.ui.components.EditText
 import com.github.yandroidua.ui.elements.ElementLine
 
 private data class LineDetailsErrorState(
-    val weightErrorMessage: String? = null
+   val weightErrorMessage: String? = null,
+   val errorChanceErrorMessage: String? = null
 )
 
 private data class Input(
-    val weight: String = "",
-    val dropDownExpanded: Boolean = false,
-    val lineType: LineType
+   val weight: String = "",
+   val dropDownExpanded: Boolean = false,
+   val errorChance: String,
+   val lineType: LineType
 )
 
 @Composable
 fun LineDetails(
-    modifier: Modifier = Modifier,
-    elementLine: ElementLine,
-    deleter: (ElementLine) -> Unit,
-    saver: (ElementLine) -> Unit
+   modifier: Modifier = Modifier,
+   elementLine: ElementLine,
+   deleter: (ElementLine) -> Unit,
+   saver: (ElementLine) -> Unit
 ) = Column(modifier) {
-   val inputState = remember { mutableStateOf(Input(weight = elementLine.weight.toString(), lineType = elementLine.lineType)) }
+   val inputState = remember {
+      mutableStateOf(
+         Input(
+            weight = elementLine.weight.toString(),
+            lineType = elementLine.lineType,
+            errorChance = elementLine.errorChance.toString()
+         )
+      )
+   }
    val errorState = remember { mutableStateOf(LineDetailsErrorState()) }
    Column(modifier = Modifier.weight(1f)) {
       Text(
-          text = "This is Line#${elementLine.id}",
-          modifier = Modifier
-              .wrapContentWidth(align = Alignment.CenterHorizontally)
-              .align(alignment = Alignment.CenterHorizontally)
+         text = "This is Line#${elementLine.id}",
+         modifier = Modifier
+            .wrapContentWidth(align = Alignment.CenterHorizontally)
+            .align(alignment = Alignment.CenterHorizontally)
       )
       Spacer(modifier = Modifier.fillMaxWidth().height(10.dp))
       Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(align = Alignment.Top)) {
          Text(text = "Weight", modifier = Modifier.align(alignment = Alignment.CenterVertically))
          Spacer(modifier = Modifier.height(1.dp).width(5.dp))
          EditText(
-             value = inputState.value.weight,
-             onValueChange = { weight ->
-                 inputState.value = inputState.value.copy(weight = weight)
-                 errorState.value = errorState.value.copy(weightErrorMessage = null)
-             },
-             error = errorState.value.weightErrorMessage,
-             maxLines = 1
+            value = inputState.value.weight,
+            onValueChange = { weight ->
+               inputState.value = inputState.value.copy(weight = weight)
+               errorState.value = errorState.value.copy(weightErrorMessage = null)
+            },
+            error = errorState.value.weightErrorMessage,
+            maxLines = 1
          )
       }
       Spacer(modifier = Modifier.fillMaxWidth().height(10.dp))
@@ -63,45 +73,60 @@ fun LineDetails(
          Text(text = "Line type:")
          Spacer(modifier = Modifier.height(1.dp).width(5.dp))
          DropdownMenu(
-             toggleModifier = Modifier.wrapContentSize(),
-             dropdownModifier = Modifier.wrapContentSize(),
-             toggle = {
-                 Text(inputState.value.lineType.name, modifier = Modifier
-                     .clickable { inputState.value = inputState.value.copy(dropDownExpanded = !inputState.value.dropDownExpanded) })
-             },
-             expanded = inputState.value.dropDownExpanded,
-             onDismissRequest = { inputState.value = inputState.value.copy(dropDownExpanded = false) }
+            toggleModifier = Modifier.wrapContentSize(),
+            dropdownModifier = Modifier.wrapContentSize(),
+            toggle = {
+               Text(inputState.value.lineType.name, modifier = Modifier
+                  .clickable {
+                     inputState.value = inputState.value.copy(dropDownExpanded = !inputState.value.dropDownExpanded)
+                  })
+            },
+            expanded = inputState.value.dropDownExpanded,
+            onDismissRequest = { inputState.value = inputState.value.copy(dropDownExpanded = false) }
          ) {
             for (lineType in LineType.values()) {
                DropdownMenuItem(
-                   onClick = {
-                       inputState.value = inputState.value.copy(dropDownExpanded = false, lineType = lineType)
-                   }
+                  onClick = {
+                     inputState.value = inputState.value.copy(dropDownExpanded = false, lineType = lineType)
+                  }
                ) { Text(text = lineType.name) }
             }
          }
       }
-
+      Spacer(modifier = Modifier.fillMaxWidth().height(10.dp))
+      Row {
+         Text(text = "Error:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+         Spacer(modifier = Modifier.height(1.dp).width(5.dp))
+         EditText(
+            value = inputState.value.errorChance,
+            onValueChange = { text -> inputState.value = inputState.value.copy(errorChance = text) },
+            error = errorState.value.errorChanceErrorMessage
+         )
+      }
    }
    Button(
-       modifier = Modifier.fillMaxWidth(),
-       onClick = { deleter(elementLine) }
+      modifier = Modifier.fillMaxWidth(),
+      onClick = { deleter(elementLine) }
    ) { Text(text = "Delete") }
    Spacer(modifier = Modifier.height(height = 20.dp))
-   Button(onClick = {
-       checkInput(
-           errorState,
-           inputState.value,
-           onValid = {
-               saver(elementLine.copy(
-                   weight = it.weight.toInt(),
-                   lineType = inputState.value.lineType,
-                   color = colorOfType(inputState.value.lineType)
-               ))
-           }
-       )
-   },
-       modifier = Modifier.fillMaxWidth()
+   Button(
+      onClick = {
+         checkInput(
+            errorState,
+            inputState.value,
+            onValid = {
+               saver(
+                  elementLine.copy(
+                     weight = it.weight.toInt(),
+                     lineType = inputState.value.lineType,
+                     errorChance = inputState.value.errorChance.toFloat(),
+                     color = colorOfType(inputState.value.lineType)
+                  )
+               )
+            }
+         )
+      },
+      modifier = Modifier.fillMaxWidth()
    ) {
       Text(text = "Save", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
    }
@@ -111,10 +136,21 @@ fun LineDetails(
 private fun checkInput(errorState: MutableState<LineDetailsErrorState>, input: Input, onValid: (Input) -> Unit) {
    var valid = true
    val lineError = checkWeight(input.weight)
+   val errChanceError = checkErrorChance(input.errorChance)
    valid = valid and lineError.isNullOrBlank()
-   errorState.value = LineDetailsErrorState(weightErrorMessage = lineError)
+   valid = valid and errChanceError.isNullOrBlank()
+   errorState.value = LineDetailsErrorState(weightErrorMessage = lineError, errorChanceErrorMessage = errChanceError)
    if (valid) {
       onValid(input)
+   }
+}
+
+private fun checkErrorChance(chance: String): String? {
+   return try {
+      val num = chance.toFloat()
+      if (num < 0.0 || num > 1.0) "Value must be in 0 to 1 range" else null
+   } catch (e: NumberFormatException) {
+      "Wrong number format"
    }
 }
 
@@ -129,8 +165,8 @@ private fun checkWeight(weight: String): String? {
 
 private fun colorOfType(type: LineType): Color {
    return when (type) {
-       LineType.DUPLEX -> Color.Black
-       LineType.HALF_DUPLEX -> Color.Green
-       LineType.SATELLITE -> Color.Red
+      LineType.DUPLEX -> Color.Black
+      LineType.HALF_DUPLEX -> Color.Green
+      LineType.SATELLITE -> Color.Red
    }
 }

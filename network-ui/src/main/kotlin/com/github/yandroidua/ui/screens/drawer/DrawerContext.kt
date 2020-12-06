@@ -10,6 +10,7 @@ import com.github.yandroidua.simulation.Simulation
 import com.github.yandroidua.simulation.buildConfiguration
 import com.github.yandroidua.simulation.models.LineType
 import com.github.yandroidua.simulation.models.SimulationRoutingTableEntry
+import com.github.yandroidua.simulation.models.packets.PacketType
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementMessage
@@ -74,6 +75,7 @@ class DrawerContext(
       private val LINE_WEIGHTS = arrayOf(2, 3, 6, 7, 9, 10, 12, 16, 18, 21, 22, 30, 32)
    }
 
+   private val random = Random(System.currentTimeMillis())
    private var drawerContext: CoroutineContext = SupervisorJob() + Dispatchers.Default
    private val drawerScope: CoroutineScope
       get() = CoroutineScope(drawerContext)
@@ -108,7 +110,7 @@ class DrawerContext(
             moveMutex.unlock()
             id
          },
-         handler = { handlePackage(it.mapToUiEvent()) }
+         handler = { event, useErr -> handlePackage(event.mapToUiEvent(), useErr) }
       )
    }
 
@@ -213,19 +215,21 @@ class DrawerContext(
       }
    }
 
-   private suspend fun handlePackage(event: SimulationResultModel) {
+   private suspend fun handlePackage(event: SimulationResultModel, useError: Boolean): Boolean {
       messageState.value = event
       when (event) {
          is SimulationResultModel.MessageStartModel -> {
-            handleSendEvent(event)
+            val err = handleSendEvent(event, useError)
             checkStopAndNext()
             deleteMessage(event.packetId)
+            return err
          }
          SimulationResultModel.EndSimulation -> {
             simulationContext.simulationStartedState.value = false
          }
          else -> onMessageChanged(event)
       }
+      return true
    }
 
    private fun findConnectableElementConnections(connectableElement: ConnectableElement): List<SimulationRoutingTableEntry> {
@@ -271,7 +275,7 @@ class DrawerContext(
       }
    }
 
-   private suspend fun handleSendEvent(model: SimulationResultModel.MessageStartModel) {
+   private suspend fun handleSendEvent(model: SimulationResultModel.MessageStartModel, useError: Boolean): Boolean {
       messageContext = MessageContext(
          id = model.packetId,
          toId = model.to,
@@ -279,13 +283,20 @@ class DrawerContext(
          fromId = model.from
       )
       onMessageChanged(model)
-      val fromWorkstation = (elementsState.value.find { it.id == model.from })?.center ?: return
-      val toWorkstation = (elementsState.value.find { it.id == model.to })?.center ?: return
+
+      val line = (elementsState.value.find { it.id == model.by }) as? ElementLine ?: return false
+      val fromWorkstation = (elementsState.value.find { it.id == model.from })?.center ?: return false
+      val toWorkstation = (elementsState.value.find { it.id == model.to })?.center ?: return false
+      val isGonnaHaveTrouble = useError and (random.nextInt(100) <= line.errorChance * 100)
+      val errorTick = random.nextInt(model.time.toInt())
+
       repeat(model.time.toInt()) {
          delay(1)
+         val err = isGonnaHaveTrouble and (errorTick == it)
          onMessageChanged(
             SimulationResultModel.MessageMoveModel(
                model.packetId,
+               if (err) PacketType.ERROR else model.packetType,
                model.from,
                model.to,
                model.by,
@@ -293,9 +304,15 @@ class DrawerContext(
                model.time
             )
          )
+         if (err) {
+            delay(100)
+            deleteMessage(model.packetId)
+            return false
+         }
          checkStoppingFlag()
       }
 
+      return true
    }
 
    private fun configureSimulation(): Simulation {
@@ -305,6 +322,7 @@ class DrawerContext(
             infoPacketSize = simulationContext.infoPacketSize
             sysPacketSize = simulationContext.sysPacketSize
             size = simulationContext.size
+            mode = simulationContext.mode
          },
          models = elementsState.value.mapNotNull { it.mapToSimulation() }
       )
@@ -317,7 +335,7 @@ class DrawerContext(
          return
       }
       elementsState.value = elementsState.value.toMutableList().apply {
-         add(ElementMessage(event.packetId, fromWorkstation.center))
+         add(ElementMessage(event.packetId, fromWorkstation.center, event.packetType))
       }
       moveMutex.unlock()
    }
@@ -331,7 +349,7 @@ class DrawerContext(
          return
       }
       elementsState.value = elementsState.value.toMutableList().apply {
-         set(index, ElementMessage(event.packetId, event.offset))
+         set(index, ElementMessage(event.packetId, event.offset, event.packetType))
       }
       moveMutex.unlock()
    }

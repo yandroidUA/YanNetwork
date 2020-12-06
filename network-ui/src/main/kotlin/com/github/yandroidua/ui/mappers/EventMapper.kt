@@ -12,7 +12,7 @@ fun Event.TextEvent.mapToUiEvent(): SimulationResultModel.TextSimulationModel = 
 )
 
 fun Event.SendPacketEvent.mapToUiEvent(): SimulationResultModel =
-    SimulationResultModel.MessageStartModel(packet.id, fromStationId, toStationId, lineId, time)
+    SimulationResultModel.MessageStartModel(packet.id, packet.type, fromStationId, toStationId, lineId, time)
 
 
 fun Event.mapToUiEvent(): SimulationResultModel {

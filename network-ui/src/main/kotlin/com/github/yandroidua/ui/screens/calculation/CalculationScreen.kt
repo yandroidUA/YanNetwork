@@ -160,8 +160,6 @@ fun CalculationWindow(
             Spacer(modifier = Modifier.height(height = 8.dp))
             ModeRadioButton(state.simulationModeState, Mode.LOGICAL)
             Spacer(modifier = Modifier.height(height = 4.dp))
-            ModeRadioButton(state.simulationModeState, Mode.LOGICAL_VIRTUAL)
-            Spacer(modifier = Modifier.height(height = 4.dp))
             ModeRadioButton(state.simulationModeState, Mode.DATAGRAM)
          }
          Button(
