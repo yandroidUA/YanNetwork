@@ -4,9 +4,12 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.lerp
 import androidx.compose.ui.graphics.Color
+import com.github.yandroidua.algorithm.BellmanFordAlgorithm
+import com.github.yandroidua.simulation.RoutingTable
 import com.github.yandroidua.simulation.Simulation
 import com.github.yandroidua.simulation.buildConfiguration
 import com.github.yandroidua.simulation.models.LineType
+import com.github.yandroidua.simulation.models.SimulationRoutingTableEntry
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementMessage
@@ -14,6 +17,7 @@ import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
+import com.github.yandroidua.ui.mappers.mapToAlgorithmEntity
 import com.github.yandroidua.ui.mappers.mapToSimulation
 import com.github.yandroidua.ui.mappers.mapToUiEvent
 import com.github.yandroidua.ui.models.SimulationResultModel
@@ -196,7 +200,7 @@ class DrawerContext(
       }
    }
 
-   fun findConnections(element: Element): List<Pair<Int, Pair<String, Int>>> {
+   fun findConnections(element: Element): List<SimulationRoutingTableEntry> {
       return when (element.type) {
          ElementType.WORKSTATION -> findConnectableElementConnections(element as ConnectableElement)
          ElementType.COMMUNICATION_NODE -> findConnectableElementConnections(element as ConnectableElement)
@@ -205,15 +209,22 @@ class DrawerContext(
       }
    }
 
-   private fun findConnectableElementConnections(connectableElement: ConnectableElement): List<Pair<Int, Pair<String, Int>>> {
-      val conns = mutableListOf<Pair<Int, Pair<String, Int>>>()
-      for (lineId in connectableElement.lineIds) {
-         val line = elementsState.value.find { it.id == lineId } as? ElementLine ?: continue
-         val station = if (line.firstStationId == connectableElement.id) line.secondStationId else line.firstStationId
-         val element = elementsState.value.find { it.id == station } ?: continue
-         conns.add(lineId to (element.type.text to station))
+   private fun findConnectableElementConnections(connectableElement: ConnectableElement): List<SimulationRoutingTableEntry> {
+      val alg = BellmanFordAlgorithm(
+         workstations = connectableElements.map { it.mapToAlgorithmEntity() },
+         lines = lines.map { it.mapToAlgorithmEntity() }
+      )
+      val routingTable = RoutingTable(
+         allElements = elementsState.value.map { it.mapToSimulation() }.filterNotNull(),
+         workstation = connectableElement.mapToSimulation()
+      )
+      return routingTable.routingTable { from, to ->
+         val fromWorkstation = connectableElements.find { it.id == from } ?: return@routingTable null
+         val toWorkstation = connectableElements.find { it.id == to } ?: return@routingTable null
+         alg.calculate(from = fromWorkstation.mapToAlgorithmEntity(), to = toWorkstation.mapToAlgorithmEntity())
+            .minByOrNull { it.summary }
+            ?.mapToSimulation()
       }
-      return conns
    }
 
    private suspend fun checkStoppingFlag() = suspendCancellableCoroutine<Unit> {

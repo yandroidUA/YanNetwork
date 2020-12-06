@@ -5,10 +5,7 @@ import androidx.compose.ui.graphics.Color
 import com.github.yandroidua.algorithm.models.Line
 import com.github.yandroidua.algorithm.models.Workstation
 import com.github.yandroidua.dump.models.*
-import com.github.yandroidua.simulation.models.LineType
-import com.github.yandroidua.simulation.models.SimulationConnection
-import com.github.yandroidua.simulation.models.SimulationModel
-import com.github.yandroidua.simulation.models.SimulationWorkstation
+import com.github.yandroidua.simulation.models.*
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementWorkstation
@@ -22,13 +19,15 @@ import com.github.yandroidua.ui.models.StartEndOffset
 fun WorkstationDump.mapToUiElement(): ConnectableElement = ElementWorkstation(
     id = id,
     offset = offset.mapToOffset(),
-    lineIds = lineIds.toMutableList()
+    lineIds = lineIds.toMutableList(),
+    network = network
 )
 
 fun CommunicationNodeDump.mapToUiElement(): ConnectableElement = ElementCommunicationNode(
     id = id,
     offset = offset.mapToOffset(),
-    lineIds = lineIds.toMutableList()
+    lineIds = lineIds.toMutableList(),
+    network = network
 )
 
 fun OffsetDump.mapToOffset(): Offset = Offset(x, y)
@@ -75,7 +74,8 @@ fun ElementLine.mapToSimulation(): SimulationConnection = SimulationConnection(
 
 fun ConnectableElement.mapToSimulation(): SimulationWorkstation = SimulationWorkstation(
     id = id,
-    connectionIds = lineIds
+    connectionIds = lineIds,
+    network = network
 )
 
 fun ConnectableElement.mapToAlgorithmEntity(): Workstation = Workstation(
@@ -90,13 +90,15 @@ fun Color.mapToDump(): ColorDump = ColorDump(red, green, blue, alpha)
 fun ElementWorkstation.mapToDump(): WorkstationDump = WorkstationDump(
     id = id,
     offset = offset.mapToDump(),
-    lineIds = lineIds
+    lineIds = lineIds,
+    network = network
 )
 
 fun ElementCommunicationNode.mapToDump(): CommunicationNodeDump = CommunicationNodeDump(
     id = id,
     offset = offset.mapToDump(),
-    lineIds = lineIds
+    lineIds = lineIds,
+    network = network
 )
 
 fun ElementLine.mapToDump(): LineDump = LineDump(

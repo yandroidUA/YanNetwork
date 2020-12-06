@@ -15,6 +15,7 @@ import org.jetbrains.skija.Typeface
 class ElementWorkstation(
         override val id: Int,
         offset: Offset,
+        override var network: String? = null,
         override val lineIds: MutableList<Int> = mutableListOf()
 ) : ImageControlElement(image = "workstation.png", offset), ConnectableElement {
 

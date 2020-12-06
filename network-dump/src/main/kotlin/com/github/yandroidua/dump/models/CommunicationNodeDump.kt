@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class CommunicationNodeDump(
         val id: Int,
         val offset: OffsetDump,
-        val lineIds: List<Int>
+        val lineIds: List<Int>,
+        val network: String? = null
 )

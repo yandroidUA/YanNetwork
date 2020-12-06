@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
+import com.github.yandroidua.simulation.models.SimulationRoutingTableEntry
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
@@ -19,7 +20,7 @@ import com.github.yandroidua.ui.elements.ElementWorkstation
 fun DetailsScreen(
    modifier: Modifier = Modifier,
    element: Element,
-   connections: List<Pair<Int, Pair<String, Int>>>,
+   connections: List<SimulationRoutingTableEntry>,
    deleter: (Element) -> Unit,
    saver: (Element) -> Unit
 ) = Column(
@@ -34,13 +35,15 @@ fun DetailsScreen(
       ElementType.WORKSTATION -> WorkstationDetails(
          elementWorkstation = element as ElementWorkstation,
          deleter = deleter,
-         connections = connections
+         connections = connections,
+         saver = saver
       )
       ElementType.LINE -> LineDetails(elementLine = element as ElementLine, deleter = deleter, saver = saver)
       ElementType.COMMUNICATION_NODE -> CommunicationNodeDetailsScreen(
          elementCommunicationNode = element as ElementCommunicationNode,
          deleter = deleter,
-         connections = connections
+         connections = connections,
+         saver = saver
       )
       else -> {}
    }

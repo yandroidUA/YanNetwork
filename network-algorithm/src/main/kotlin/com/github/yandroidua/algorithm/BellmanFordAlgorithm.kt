@@ -41,7 +41,7 @@ class BellmanFordAlgorithm(
         } }
 
         // get distance path
-        val analyzingDistances = if (wTo == null) distances else arrayOf(distances.find { it.workstationId == wTo.number }!!)
+        val analyzingDistances = if (wTo == null) distances else arrayOf(distances.find { it.workstationId == wTo.number } ?: return emptyList())
         for (to in analyzingDistances) {
             calculateMinPath(to, from, or, distances)
         }
