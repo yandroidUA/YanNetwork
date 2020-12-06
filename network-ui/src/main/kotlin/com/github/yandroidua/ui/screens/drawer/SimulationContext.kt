@@ -9,12 +9,11 @@ import kotlinx.coroutines.Job
 data class SimulationContext(
     val simulationStartedState: MutableState<Boolean>,
     val simulationStoppedState: MutableState<Boolean>,
+    val simulationPathState: MutableState<PathResultElements?>,
     var infoPacketSize: Int = 256,
     var sysPacketSize: Int = 10,
     var size: Int = 65536,
     var mode: Mode = Mode.LOGICAL,
-    var simulationJob: Job? = null,
-    var simulationPath: PathResultElements? = null,
     var next: Boolean = false,
     var events: List<SimulationResultModel> = emptyList(),
     var simulationStarted: Boolean = false

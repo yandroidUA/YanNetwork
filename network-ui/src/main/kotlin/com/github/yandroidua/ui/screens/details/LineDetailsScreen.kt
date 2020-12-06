@@ -39,7 +39,7 @@ fun LineDetails(
    val errorState = remember { mutableStateOf(LineDetailsErrorState()) }
    Column(modifier = Modifier.weight(1f)) {
       Text(
-          text = "This is Line",
+          text = "This is Line#${elementLine.id}",
           modifier = Modifier
               .wrapContentWidth(align = Alignment.CenterHorizontally)
               .align(alignment = Alignment.CenterHorizontally)

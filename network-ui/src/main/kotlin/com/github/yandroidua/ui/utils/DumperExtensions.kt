@@ -66,11 +66,12 @@ fun ConfigDump.toApplicationState(): AppState {
        drawerContext = DrawerContext(
            elementsState = mutableStateOf(elements),
            selectedElementState = mutableStateOf(null),
-           elementCounter = elements.size,
+           elementCounter = elements.maxByOrNull { it.id }?.id?.plus(1) ?: elements.size,
            messageState = mutableStateOf(null),
            simulationContext = SimulationContext(
               simulationStartedState = mutableStateOf(false),
-              simulationStoppedState = mutableStateOf(false)
+              simulationStoppedState = mutableStateOf(false),
+              simulationPathState = mutableStateOf(null)
            )
        )
    )

@@ -2,15 +2,19 @@ package com.github.yandroidua.simulation
 
 import com.github.yandroidua.simulation.models.*
 import com.github.yandroidua.simulation.models.packets.InformationPacket
+import com.github.yandroidua.simulation.models.packets.Packet
 import com.github.yandroidua.simulation.models.packets.SystemInformationPacket
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
 class Simulation(
-    private val configuration: Configuration,
-    private val models: List<SimulationModel>
+   private val configuration: Configuration,
+   private val models: List<SimulationModel>
 ) {
 
    companion object {
@@ -27,75 +31,96 @@ class Simulation(
          LOGIC_ADDITIONAL_PACKAGES_COUNT
       } else {
          0
-      } +
-          ceil((1f + connection.errorChance) * configuration.size / configuration.sysPacketSize).toInt()
+      } + calculateInformationPackages(connection)
    }
 
    private fun calculateDelay(connection: SimulationConnection): Long {
       return 200
    }
 
-   private fun panic(events: MutableList<Event>, text: String) {
-      events.add(Event.ErrorEvent(text))
-   }
+   private fun sendPackageToEnd(
+      scope: CoroutineScope,
+      packet: Packet,
+      path: SimulationPath,
+      handler: suspend (Event) -> Unit,
+      after: suspend () -> Unit = {}
+   ) = scope.launch {
+      var fromWorkstation: SimulationWorkstation =
+         models.find { it.id == path.from } as? SimulationWorkstation ?: return@launch
 
-   private fun sendPackage(
-       events: MutableList<Event>,
-       from: SimulationWorkstation,
-       to: SimulationWorkstation,
-       by: SimulationConnection
-   ) {
-//      events.add(Event.TextEvent("Sending information packages from ${from.id} to ${to.id}"))
-      val informationPackagesCount = calculateInformationPackages(by)
-      val systemInfPackageCount = calculateSystemInformationPackages(by)
-       events.add(Event.SendPacketsEvent(
-          packets = listOf(
-              InformationPacket(informationPackagesCount),
-              SystemInformationPacket(systemInfPackageCount)
-          ),
-          lineId = by.id,
-          fromStationId = from.id,
-          toStationId = to.id,
-          time = calculateDelay(by)
-      ))
-   }
-
-   fun simulate(): List<Event> {
-       val events = mutableListOf<Event>()
-//        emit(Event.TextEvent(text = "Simulation started"))
-      val fromWorkstation: SimulationWorkstation? = models.find {
-         it.id == (configuration.path?.from ?: it.id.minus(1))
-      } as? SimulationWorkstation
-
-      if (fromWorkstation == null) {
-         panic(events, text = "Cannot find start SimulationWorkstation with id == ${configuration.path?.from}")
-         return events
-      }
-
-      var from: SimulationWorkstation = fromWorkstation
-      for ((index, pathEntry) in (configuration.path?.path ?: emptyList()).withIndex()) {
+      for ((index, pathEntry) in path.path.withIndex()) {
          if (index == 0) continue
-         val connection = models.find { it.id == pathEntry.first } as? SimulationConnection
 
-         if (connection == null) {
-            panic(events, text = "Cannot find Connection with id = ${pathEntry.first}")
-            return events
+         val connection = models.find { it.id == pathEntry.first } as? SimulationConnection ?: return@launch
+         val workstation = models.find { it.id == pathEntry.second } as? SimulationWorkstation ?: return@launch
+
+         sendPackage(fromWorkstation.id, workstation.id, connection.id, packet, 100L, handler)
+         fromWorkstation = workstation
+      }
+      after()
+   }
+
+   private suspend fun sendPackageToEndSuspended(
+      packet: Packet,
+      path: SimulationPath,
+      handler: suspend (Event) -> Unit
+   ) {
+      var fromWorkstation: SimulationWorkstation =
+         models.find { it.id == path.from } as? SimulationWorkstation ?: return
+
+      for ((index, pathEntry) in path.path.withIndex()) {
+         if (index == 0) continue
+
+         val connection = models.find { it.id == pathEntry.first } as? SimulationConnection ?: return
+         val workstation = models.find { it.id == pathEntry.second } as? SimulationWorkstation ?: return
+
+         sendPackage(fromWorkstation.id, workstation.id, connection.id, packet, 100L, handler)
+         fromWorkstation = workstation
+      }
+   }
+
+   private suspend fun sendPackage(
+      from: Int,
+      to: Int,
+      by: Int,
+      packet: Packet,
+      time: Long,
+      handler: suspend (Event) -> Unit
+   ) {
+      handler(
+         Event.SendPacketEvent(
+            fromStationId = from,
+            toStationId = to,
+            lineId = by,
+            packet = packet,
+            time = time
+         )
+      )
+   }
+
+   fun simulate(
+      scope: CoroutineScope,
+      idGenerator: suspend () -> Int,
+      handler: suspend (Event) -> Unit
+   ) = scope.launch {
+      val path = configuration.path ?: return@launch
+
+
+//      TCP / UDP
+      repeat(100) {
+         sendPackageToEnd(scope, InformationPacket(id = idGenerator(), size = 20), path, handler) {
+            sendPackageToEnd(scope, SystemInformationPacket(id = idGenerator(), size = 20), path.reverse(), handler)
          }
-
-         val workstation = models.find { it.id == pathEntry.second } as? SimulationWorkstation
-
-         if (workstation == null) {
-            panic(events, text = "Cannot find Workstation with id = ${pathEntry.second}")
-            return events
-         }
-
-         sendPackage(events, from, workstation, connection)
-
-         from = workstation
+         delay(200L)
       }
 
-       events.add(Event.EndSimulationEvent)
-       return events
+      //TCP
+//      repeat(3) {
+//         sendPackageToEndSuspended(InformationPacket(id = idGenerator(), size = 20), path, handler)
+//         sendPackageToEndSuspended(SystemInformationPacket(id = idGenerator(), size = 20), path.reverse(), handler)
+//         delay(200L)
+//      }
+
    }
 
 }

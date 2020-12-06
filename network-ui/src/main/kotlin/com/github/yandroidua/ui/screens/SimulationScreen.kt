@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonColors
+import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -15,9 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.imageFromResource
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.dp
-import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.models.PathResultElements
+import com.github.yandroidua.ui.models.SimulationResultModel
 
 @Composable
 fun SimulationScreen(
@@ -29,7 +31,8 @@ fun SimulationScreen(
    onRestart: () -> Unit,
    onStop: () -> Unit,
    onNext: () -> Unit,
-   onResume: () -> Unit
+   onResume: () -> Unit,
+   onClose: () -> Unit
 ) {
    Column(
       modifier
@@ -38,6 +41,14 @@ fun SimulationScreen(
          .border(width = 2.dp, color = Color.Black, shape = RectangleShape)
          .padding(10.dp)
    ) {
+      Button(
+         onClick = onClose,
+         modifier = Modifier
+            .padding(all = 4.dp)
+            .wrapContentSize(align = Alignment.TopEnd)
+            .background(Color.Red)
+      ) { Text(text = "Close") }
+      Spacer(modifier = Modifier.height(height = 8.dp))
       Text(text = "${simulationState.value}", modifier = Modifier.align(alignment = Alignment.CenterHorizontally))
       Spacer(modifier = Modifier.height(height = 10.dp))
       Path(path = path, steps = path.path.size, isSendEnabled = false)
@@ -59,9 +70,10 @@ fun StatusButton(
    onClick: () -> Unit,
    text: @Composable RowScope.() -> Unit
 ) {
-   Surface(modifier = Modifier
-      .fillMaxWidth()
-      .alpha(alpha = if (enabled) 1f else 0.5f)
+   Surface(
+      modifier = Modifier
+         .fillMaxWidth()
+         .alpha(alpha = if (enabled) 1f else 0.5f)
    ) {
       Button(onClick = onClick, content = text)
    }

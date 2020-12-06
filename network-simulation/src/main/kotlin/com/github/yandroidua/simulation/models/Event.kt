@@ -6,12 +6,12 @@ sealed class Event {
 
     data class TextEvent(val text: String) : Event()
 
-    data class SendPacketsEvent(
+    data class SendPacketEvent(
             val fromStationId: Int,
             val toStationId: Int,
             val lineId: Int,
             val time: Long,
-            val packets: List<Packet>
+            val packet: Packet
     ) : Event()
 
     object EndSimulationEvent: Event()

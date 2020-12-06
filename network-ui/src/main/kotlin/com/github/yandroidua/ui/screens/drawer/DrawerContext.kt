@@ -22,10 +22,11 @@ import com.github.yandroidua.ui.mappers.mapToSimulation
 import com.github.yandroidua.ui.mappers.mapToUiEvent
 import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.models.StartEndOffset
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.random.Random
 
@@ -73,6 +74,12 @@ class DrawerContext(
       private val LINE_WEIGHTS = arrayOf(2, 3, 6, 7, 9, 10, 12, 16, 18, 21, 22, 30, 32)
    }
 
+   private var drawerContext: CoroutineContext = SupervisorJob() + Dispatchers.Default
+   private val drawerScope: CoroutineScope
+      get() = CoroutineScope(drawerContext)
+
+   val moveMutex = Mutex(locked = false)
+
    val lines: List<ElementLine>
       get() = elementsState.value.filterIsInstance<ElementLine>()
 
@@ -86,32 +93,29 @@ class DrawerContext(
       get() = elementsState.value.filterIsInstance<ElementCommunicationNode>()
 
    fun startSimulation() {
-      simulationContext.simulationJob?.cancel()
-      deleteMessage()
-      if (simulationContext.simulationPath == null) return
+      deleteAllMessages()
+      if (simulationContext.simulationPathState.value == null) return
       simulationContext.simulationStartedState.value = true
       simulationContext.simulationStoppedState.value = false
       simulationContext.next = false
-      val events = configureSimulation().simulate().map { it.mapToUiEvent() }
-      simulationContext.simulationJob = GlobalScope.launch {
-         val startTime = System.currentTimeMillis()
-         for (event in events) {
-            messageState.value = event
-            when (event) {
-               is SimulationResultModel.MessageStartModel -> {
-                  handleSendEvent(event)
-                  checkStopAndNext()
-                  deleteMessage()
-               }
-               SimulationResultModel.EndSimulation -> {
-                  simulationContext.simulationStartedState.value = false
-               }
-               else -> onMessageChanged(event)
-            }
-         }
-         val endTime = System.currentTimeMillis()
-         println("Time: ${endTime - startTime}")
-      }
+      drawerContext = SupervisorJob() + Dispatchers.Default
+      val simulation = configureSimulation()
+      simulation.simulate(
+         scope = drawerScope,
+         idGenerator = {
+            moveMutex.lock()
+            val id = elementCounter.also { elementCounter++ }
+            moveMutex.unlock()
+            id
+         },
+         handler = { handlePackage(it.mapToUiEvent()) }
+      )
+   }
+
+   fun cancelAll() {
+      drawerContext.cancel()
+      deleteAllMessages(force = true)
+      simulationContext.simulationPathState.value = null
    }
 
    fun stop() {
@@ -209,6 +213,21 @@ class DrawerContext(
       }
    }
 
+   private suspend fun handlePackage(event: SimulationResultModel) {
+      messageState.value = event
+      when (event) {
+         is SimulationResultModel.MessageStartModel -> {
+            handleSendEvent(event)
+            checkStopAndNext()
+            deleteMessage(event.packetId)
+         }
+         SimulationResultModel.EndSimulation -> {
+            simulationContext.simulationStartedState.value = false
+         }
+         else -> onMessageChanged(event)
+      }
+   }
+
    private fun findConnectableElementConnections(connectableElement: ConnectableElement): List<SimulationRoutingTableEntry> {
       val alg = BellmanFordAlgorithm(
          workstations = connectableElements.map { it.mapToAlgorithmEntity() },
@@ -228,7 +247,8 @@ class DrawerContext(
    }
 
    private suspend fun checkStoppingFlag() = suspendCancellableCoroutine<Unit> {
-      while (simulationContext.simulationStoppedState.value) {}
+      while (simulationContext.simulationStoppedState.value) {
+      }
       it.resume(Unit)
    }
 
@@ -239,19 +259,21 @@ class DrawerContext(
       checkStoppingFlag()
    }
 
-   private fun onMessageChanged(event: SimulationResultModel) {
+   private suspend fun onMessageChanged(event: SimulationResultModel) {
       when (event) {
-         is SimulationResultModel.TextSimulationModel -> deleteMessage()
+         is SimulationResultModel.TextSimulationModel -> {
+         }
          is SimulationResultModel.MessageStartModel -> createNewMessage(event)
          is SimulationResultModel.MessageMoveModel -> moveMessage(event)
-         is SimulationResultModel.ErrorMessageModel -> deleteMessage()
-         SimulationResultModel.EndSimulation -> deleteMessage()
+         is SimulationResultModel.ErrorMessageModel -> {
+         }
+         SimulationResultModel.EndSimulation -> deleteAllMessages()
       }
    }
 
    private suspend fun handleSendEvent(model: SimulationResultModel.MessageStartModel) {
       messageContext = MessageContext(
-         id = elementCounter.also { elementCounter++ },
+         id = model.packetId,
          toId = model.to,
          lineId = model.by,
          fromId = model.from
@@ -263,6 +285,7 @@ class DrawerContext(
          delay(1)
          onMessageChanged(
             SimulationResultModel.MessageMoveModel(
+               model.packetId,
                model.from,
                model.to,
                model.by,
@@ -278,7 +301,7 @@ class DrawerContext(
    private fun configureSimulation(): Simulation {
       return Simulation(
          configuration = buildConfiguration {
-            path = simulationContext.simulationPath!!.mapToSimulation()
+            path = simulationContext.simulationPathState.value!!.mapToSimulation()
             infoPacketSize = simulationContext.infoPacketSize
             sysPacketSize = simulationContext.sysPacketSize
             size = simulationContext.size
@@ -287,28 +310,47 @@ class DrawerContext(
       )
    }
 
-   private fun createNewMessage(event: SimulationResultModel.MessageStartModel) {
-      val fromWorkstation = elementsState.value.find { it.id == event.from } ?: return
-      elementsState.value = elementsState.value.toMutableList().apply {
-         add(ElementMessage(messageContext!!.id, fromWorkstation.center))
+   private suspend fun createNewMessage(event: SimulationResultModel.MessageStartModel) {
+     moveMutex.lock()
+      val fromWorkstation = elementsState.value.find { it.id == event.from } ?: kotlin.run {
+         moveMutex.unlock()
+         return
       }
+      elementsState.value = elementsState.value.toMutableList().apply {
+         add(ElementMessage(event.packetId, fromWorkstation.center))
+      }
+      moveMutex.unlock()
    }
 
-   private fun moveMessage(event: SimulationResultModel.MessageMoveModel) {
-      val msgContext = messageContext ?: return
-      val index = elementsState.value.indexOfFirst { it.type == ElementType.MESSAGE }
-      if (index == -1) return
-      elementsState.value = elementsState.value.toMutableList().apply {
-         set(index, ElementMessage(msgContext.id, event.offset))
+   private suspend fun moveMessage(event: SimulationResultModel.MessageMoveModel) {
+      //todo need thread safe
+      moveMutex.lock()
+      val index = elementsState.value.indexOfFirst { it.id == event.packetId }
+      if (index == -1) {
+         moveMutex.unlock()
+         return
       }
+      elementsState.value = elementsState.value.toMutableList().apply {
+         set(index, ElementMessage(event.packetId, event.offset))
+      }
+      moveMutex.unlock()
    }
 
-   private fun deleteMessage() {
+   private fun deleteAllMessages(force: Boolean = false) = runBlocking {
+      if (!force) moveMutex.lock()
+      elementsState.value.filter { it.type == ElementType.MESSAGE }.map { it.id }.forEach {
+         deleteMessage(it)
+      }
+      if (!force) moveMutex.unlock()
+   }
+
+   private suspend fun deleteMessage(id: Int) {
+      moveMutex.lock()
       messageContext = null
-      val messageElement = elementsState.value.find { it.type == ElementType.MESSAGE }
-      messageElement?.let {
-         elementsState.value = elementsState.value.toMutableList().apply { remove(messageElement) }
+      elementsState.value.find { it.id == id }?.let {
+         elementsState.value = elementsState.value.toMutableList().apply { remove(it) }
       }
+      moveMutex.unlock()
    }
 
    private fun onCommunicationNodeCreate(offset: Offset) {

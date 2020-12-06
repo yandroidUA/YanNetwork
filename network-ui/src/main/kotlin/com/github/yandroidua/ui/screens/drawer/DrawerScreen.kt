@@ -72,7 +72,7 @@ fun PanelScreen(
       ControlPanel(context, navigator)
    }
 
-   if (context.selectedElementState.value != null && context.simulationContext.simulationPath == null) {
+   if (context.selectedElementState.value != null && context.simulationContext.simulationPathState.value == null) {
       DetailsScreen(
          modifier = Modifier
             .width(width = DETAILS_SCREEN_WIDTH.dp)
@@ -83,7 +83,7 @@ fun PanelScreen(
          connections = context.findConnections(context.selectedElementState.value!!)
       )
    }
-   if (context.simulationContext.simulationPath != null) {
+   if (context.simulationContext.simulationPathState.value != null) {
       SimulationScreen(
          modifier = Modifier
             .width(width = DETAILS_SCREEN_WIDTH.dp)
@@ -92,11 +92,12 @@ fun PanelScreen(
          stopState = context.simulationContext.simulationStoppedState,
          simulationState = context.messageState,
          startState = context.simulationContext.simulationStartedState,
-         path = context.simulationContext.simulationPath!!,
+         path = context.simulationContext.simulationPathState.value!!,
          onRestart = onRestart,
          onNext = context::next,
          onStop = context::stop,
-         onResume = context::resume
+         onResume = context::resume,
+         onClose = context::cancelAll
       )
    }
 }

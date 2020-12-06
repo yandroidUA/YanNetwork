@@ -11,14 +11,14 @@ fun Event.TextEvent.mapToUiEvent(): SimulationResultModel.TextSimulationModel = 
         text
 )
 
-fun Event.SendPacketsEvent.mapToUiEvent(): SimulationResultModel =
-    SimulationResultModel.MessageStartModel(fromStationId, toStationId, lineId, time)
+fun Event.SendPacketEvent.mapToUiEvent(): SimulationResultModel =
+    SimulationResultModel.MessageStartModel(packet.id, fromStationId, toStationId, lineId, time)
 
 
 fun Event.mapToUiEvent(): SimulationResultModel {
     return when (this) {
         is Event.TextEvent -> this.mapToUiEvent()
-        is Event.SendPacketsEvent -> this.mapToUiEvent()
+        is Event.SendPacketEvent -> this.mapToUiEvent()
         is Event.ErrorEvent -> this.mapToUiEvent()
         is Event.EndSimulationEvent -> SimulationResultModel.EndSimulation
     }

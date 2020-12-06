@@ -56,7 +56,8 @@ private fun createEmptyDrawerContext(): DrawerContext {
        messageState = mutableStateOf(null),
        simulationContext = SimulationContext(
           simulationStartedState = mutableStateOf(false),
-          simulationStoppedState = mutableStateOf(false)
+          simulationStoppedState = mutableStateOf(false),
+          simulationPathState = mutableStateOf(null)
        )
    )
 }
@@ -177,7 +178,7 @@ private fun createResults(
           state = navigationState,
           tabType = TabType.PANEL,
           args = applicationState.drawerContext?.apply {
-              simulationContext.simulationPath = simulationPath
+              simulationContext.simulationPathState.value = simulationPath
           }?.also { applicationState.drawerContext = it }
       )
    }
