@@ -46,7 +46,7 @@ fun SimulationScreen(
          modifier = Modifier
             .padding(all = 4.dp)
             .wrapContentSize(align = Alignment.TopEnd)
-            .background(Color.Red)
+            .align(Alignment.End)
       ) { Text(text = "Close") }
       Spacer(modifier = Modifier.height(height = 8.dp))
       Text(text = "${simulationState.value}", modifier = Modifier.align(alignment = Alignment.CenterHorizontally))

@@ -4,7 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -22,7 +25,8 @@ fun DetailsScreen(
    element: Element,
    connections: List<SimulationRoutingTableEntry>,
    deleter: (Element) -> Unit,
-   saver: (Element) -> Unit
+   saver: (Element) -> Unit,
+   closer: () -> Unit
 ) = Column(
    modifier.then(
       Modifier
@@ -31,6 +35,7 @@ fun DetailsScreen(
          .padding(10.dp)
    )
 ) {
+   Button(onClick = closer, modifier = Modifier.align(Alignment.End)) { Text(text = "Close") }
    when (element.type) {
       ElementType.WORKSTATION -> WorkstationDetails(
          elementWorkstation = element as ElementWorkstation,

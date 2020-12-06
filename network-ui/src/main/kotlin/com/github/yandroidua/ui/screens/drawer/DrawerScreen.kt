@@ -72,7 +72,7 @@ fun PanelScreen(
       ControlPanel(context, navigator)
    }
 
-   if (context.selectedElementState.value != null && context.simulationContext.simulationPathState.value == null) {
+   if (context.selectedElementState.value != null) {
       DetailsScreen(
          modifier = Modifier
             .width(width = DETAILS_SCREEN_WIDTH.dp)
@@ -80,7 +80,8 @@ fun PanelScreen(
          element = context.selectedElementState.value!!,
          deleter = context::removeElement,
          saver = context::changeElement,
-         connections = context.findConnections(context.selectedElementState.value!!)
+         connections = context.findConnections(context.selectedElementState.value!!),
+         closer = { context.selectedElementState.value = null }
       )
    }
    if (context.simulationContext.simulationPathState.value != null) {
