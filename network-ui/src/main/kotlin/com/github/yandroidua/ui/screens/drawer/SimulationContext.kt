@@ -13,6 +13,8 @@ data class SimulationContext(
     var infoPacketSize: Int = 256,
     var sysPacketSize: Int = 10,
     var size: Int = 65536,
+    var resultInfoSize: Int = 0,
+    var resultSysSize: Int = 0,
     var mode: Mode = Mode.LOGICAL,
     var next: Boolean = false,
     var events: List<SimulationResultModel> = emptyList(),

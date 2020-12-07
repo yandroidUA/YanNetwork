@@ -220,6 +220,17 @@ class DrawerContext(
       when (event) {
          is SimulationResultModel.MessageStartModel -> {
             val err = handleSendEvent(event, useError)
+//            if (!err) {
+//               when (event.packetType) {
+//                  PacketType.INFORMATION -> {
+//                     simulationContext.resultSysSize += event.size
+//                  }
+//                  PacketType.SYSTEM -> {
+//                     simulationContext.resultSysSize += event.size
+//                  }
+//                  PacketType.ERROR -> {}
+//               }
+//            }
             checkStopAndNext()
             deleteMessage(event.packetId)
             return err
@@ -265,12 +276,10 @@ class DrawerContext(
 
    private suspend fun onMessageChanged(event: SimulationResultModel) {
       when (event) {
-         is SimulationResultModel.TextSimulationModel -> {
-         }
+         is SimulationResultModel.TextSimulationModel -> {}
          is SimulationResultModel.MessageStartModel -> createNewMessage(event)
          is SimulationResultModel.MessageMoveModel -> moveMessage(event)
-         is SimulationResultModel.ErrorMessageModel -> {
-         }
+         is SimulationResultModel.ErrorMessageModel -> {}
          SimulationResultModel.EndSimulation -> deleteAllMessages()
       }
    }
@@ -289,7 +298,7 @@ class DrawerContext(
       val toWorkstation = (elementsState.value.find { it.id == model.to })?.center ?: return false
       val isGonnaHaveTrouble = useError and (random.nextInt(100) < line.errorChance * 100)
       val errorTick = random.nextInt(model.time.toInt())
-
+      println("Err: $isGonnaHaveTrouble, event: $model")
       repeat(model.time.toInt()) {
          delay(1)
          val err = isGonnaHaveTrouble and (errorTick == it)
@@ -341,7 +350,6 @@ class DrawerContext(
    }
 
    private suspend fun moveMessage(event: SimulationResultModel.MessageMoveModel) {
-      //todo need thread safe
       moveMutex.lock()
       val index = elementsState.value.indexOfFirst { it.id == event.packetId }
       if (index == -1) {
