@@ -13,14 +13,5 @@ data class Configuration(
         var sysPacketSize: Int = 0,
         var size: Int = 0,
         var frameInformationSize: Int = 10,
-        var packetInformationSize: Int = 40,
-        var connectionRnadomDelayRange: IntArray = DEFAULT_DELAY_RANGE,
-        var connectionRandomHalfDuplexAdditionRange: IntArray = DEFAULT_HALF_DUPLEX_DELAY_RANGE,
-        var satteliteRandomDelayRange: IntArray = DEFAULT_SATELLITE_DELAY_RANGE
-) {
-    companion object {
-        val DEFAULT_HALF_DUPLEX_DELAY_RANGE = intArrayOf(2, 7)
-        val DEFAULT_DELAY_RANGE = intArrayOf(0, 5)
-        val DEFAULT_SATELLITE_DELAY_RANGE = intArrayOf(4, 10)
-    }
-}
+        var packetInformationSize: Int = 40
+)
