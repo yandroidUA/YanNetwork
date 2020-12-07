@@ -8,8 +8,7 @@ import com.github.yandroidua.algorithm.BellmanFordAlgorithm
 import com.github.yandroidua.simulation.RoutingTable
 import com.github.yandroidua.simulation.Simulation
 import com.github.yandroidua.simulation.buildConfiguration
-import com.github.yandroidua.simulation.models.LineType
-import com.github.yandroidua.simulation.models.SimulationRoutingTableEntry
+import com.github.yandroidua.simulation.models.*
 import com.github.yandroidua.simulation.models.packets.PacketType
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
 import com.github.yandroidua.ui.elements.ElementLine
@@ -80,7 +79,7 @@ class DrawerContext(
    private val drawerScope: CoroutineScope
       get() = CoroutineScope(drawerContext)
 
-   val moveMutex = Mutex(locked = false)
+   private val moveMutex = Mutex(locked = false)
 
    val lines: List<ElementLine>
       get() = elementsState.value.filterIsInstance<ElementLine>()
@@ -102,16 +101,9 @@ class DrawerContext(
       simulationContext.next = false
       drawerContext = SupervisorJob() + Dispatchers.Default
       val simulation = configureSimulation()
-      simulation.simulate(
-         scope = drawerScope,
-         idGenerator = {
-            moveMutex.lock()
-            val id = elementCounter.also { elementCounter++ }
-            moveMutex.unlock()
-            id
-         },
-         handler = { event, useErr -> handlePackage(event.mapToUiEvent(), useErr) }
-      )
+      simulation.simulate(drawerScope, createSimulationParams()).also {
+         simulationContext.startTime = System.currentTimeMillis()
+      }
    }
 
    fun cancelAll() {
@@ -215,6 +207,43 @@ class DrawerContext(
       }
    }
 
+   private fun createSimulationParams(): SimulationParams {
+      return when (simulationContext.mode) {
+         Mode.LOGICAL -> createLogicalParams()
+         Mode.DATAGRAM -> createDatagramParams()
+      }
+   }
+
+   private fun createLogicalParams(): SimulationParams.TcpSimulationParams {
+      return SimulationParams.TcpSimulationParams(
+         path = simulationContext.simulationPathState.value?.mapToSimulation(),
+         idGenerator = this::idGenerator,
+         handler = this::simulationPackageHandler
+      )
+   }
+
+   private fun createDatagramParams(): SimulationParams.UdpSimulationParams {
+      val routingTables = connectableElements.map { SimulationRoutingTable(it.id, findConnectableElementConnections(it)) }
+      return SimulationParams.UdpSimulationParams(
+         from = simulationContext.fromId,
+         to = simulationContext.toId,
+         routingTables = routingTables,
+         idGenerator = this::idGenerator,
+         handler = this::simulationPackageHandler
+      )
+   }
+
+   private suspend fun idGenerator(): Int {
+      moveMutex.lock()
+      val id = elementCounter.also { elementCounter++ }
+      moveMutex.unlock()
+      return id
+   }
+
+   private suspend fun simulationPackageHandler(event: Event, canBeError: Boolean): Boolean {
+      return handlePackage(event.mapToUiEvent(), canBeError)
+   }
+
    private suspend fun handlePackage(event: SimulationResultModel, useError: Boolean): Boolean {
       messageState.value = event
       when (event) {
@@ -224,7 +253,9 @@ class DrawerContext(
             deleteMessage(event.packetId)
             return err
          }
-         SimulationResultModel.EndSimulation -> {
+         is SimulationResultModel.EndSimulation -> {
+            simulationContext.endTime = System.currentTimeMillis()
+            println("Duration: ${simulationContext.endTime - simulationContext.startTime}, start: ${simulationContext.startTime}, end: ${simulationContext.endTime}")
             simulationContext.simulationStartedState.value = false
          }
          else -> onMessageChanged(event)
@@ -265,13 +296,11 @@ class DrawerContext(
 
    private suspend fun onMessageChanged(event: SimulationResultModel) {
       when (event) {
-         is SimulationResultModel.TextSimulationModel -> {
-         }
+         is SimulationResultModel.TextSimulationModel -> {}
          is SimulationResultModel.MessageStartModel -> createNewMessage(event)
          is SimulationResultModel.MessageMoveModel -> moveMessage(event)
-         is SimulationResultModel.ErrorMessageModel -> {
-         }
-         SimulationResultModel.EndSimulation -> deleteAllMessages()
+         is SimulationResultModel.ErrorMessageModel -> {}
+         is SimulationResultModel.EndSimulation -> deleteAllMessages()
       }
    }
 
@@ -289,7 +318,6 @@ class DrawerContext(
       val toWorkstation = (elementsState.value.find { it.id == model.to })?.center ?: return false
       val isGonnaHaveTrouble = useError and (random.nextInt(100) < line.errorChance * 100)
       val errorTick = random.nextInt(model.time.toInt())
-
       repeat(model.time.toInt()) {
          delay(1)
          val err = isGonnaHaveTrouble and (errorTick == it)
@@ -341,7 +369,6 @@ class DrawerContext(
    }
 
    private suspend fun moveMessage(event: SimulationResultModel.MessageMoveModel) {
-      //todo need thread safe
       moveMutex.lock()
       val index = elementsState.value.indexOfFirst { it.id == event.packetId }
       if (index == -1) {
@@ -357,18 +384,18 @@ class DrawerContext(
    private fun deleteAllMessages(force: Boolean = false) = runBlocking {
       if (!force) moveMutex.lock()
       elementsState.value.filter { it.type == ElementType.MESSAGE }.map { it.id }.forEach {
-         deleteMessage(it)
+         deleteMessage(it, force)
       }
       if (!force) moveMutex.unlock()
    }
 
-   private suspend fun deleteMessage(id: Int) {
-      moveMutex.lock()
+   private suspend fun deleteMessage(id: Int, force: Boolean = false) {
+      if (!force) moveMutex.lock()
       messageContext = null
       elementsState.value.find { it.id == id }?.let {
          elementsState.value = elementsState.value.toMutableList().apply { remove(it) }
       }
-      moveMutex.unlock()
+      if (!force) moveMutex.unlock()
    }
 
    private fun onCommunicationNodeCreate(offset: Offset) {

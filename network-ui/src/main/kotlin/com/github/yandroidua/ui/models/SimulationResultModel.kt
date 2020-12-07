@@ -10,6 +10,7 @@ sealed class SimulationResultModel {
    data class MessageStartModel(
       val packetId: Int,
       val packetType: PacketType,
+      val size: Int,
       val from: Int,
       val to: Int,
       val by: Int,
@@ -26,7 +27,7 @@ sealed class SimulationResultModel {
       val time: Long
       ) : SimulationResultModel()
 
-   object EndSimulation : SimulationResultModel()
+   data class EndSimulation(val systemBytes: Int, val infoBytes: Int) : SimulationResultModel()
 
    data class ErrorMessageModel(val reason: String) : SimulationResultModel()
 

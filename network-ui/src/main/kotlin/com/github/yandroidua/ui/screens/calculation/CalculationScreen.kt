@@ -30,10 +30,10 @@ import com.github.yandroidua.ui.screens.drawer.SimulationContext
 
 @OptIn(ExperimentalKeyInput::class)
 fun CalculationWindow(
-    workstations: List<ConnectableElement>,
-    lines: List<ElementLine>,
-    simulationContext: SimulationContext,
-    onCalculated: (PathCalculationResult) -> Unit
+   workstations: List<ConnectableElement>,
+   lines: List<ElementLine>,
+   simulationContext: SimulationContext,
+   onCalculated: (PathCalculationResult) -> Unit
 ) {
    val window = AppWindow(size = IntSize(600, 400)).also {
       it.keyboard.setShortcut(Key.Escape) {
@@ -43,45 +43,48 @@ fun CalculationWindow(
    window.show {
       val state = remember {
          CalculationContext(
-             fromWorkstationState = mutableStateOf(null),
-             toWorkstationState = mutableStateOf(null),
-             workstationFromDropDownState = mutableStateOf(false),
-             workstationToDropDownState = mutableStateOf(false),
-             messageSizeState = mutableStateOf(simulationContext.size.toString()),
-             systemPacketSizeState = mutableStateOf(simulationContext.sysPacketSize.toString()),
-             infoPacketSizeState = mutableStateOf(simulationContext.infoPacketSize.toString()),
-             simulationModeState = mutableStateOf(simulationContext.mode),
-             calculationFromErrorContext = CalculationFromErrorContext(
-                 workstationFromErrorState = mutableStateOf(false),
-                 messageSizeErrorState = mutableStateOf(null),
-                 informationPackageSizeErrorState = mutableStateOf(null),
-                 systemPackageSizeErrorState = mutableStateOf(null)
-             )
+            fromWorkstationState = mutableStateOf(null),
+            toWorkstationState = mutableStateOf(null),
+            workstationFromDropDownState = mutableStateOf(false),
+            workstationToDropDownState = mutableStateOf(false),
+            messageSizeState = mutableStateOf(simulationContext.size.toString()),
+            systemPacketSizeState = mutableStateOf(simulationContext.sysPacketSize.toString()),
+            infoPacketSizeState = mutableStateOf(simulationContext.infoPacketSize.toString()),
+            simulationModeState = mutableStateOf(simulationContext.mode),
+            calculationFromErrorContext = CalculationFromErrorContext(
+               workstationFromErrorState = mutableStateOf(false),
+               messageSizeErrorState = mutableStateOf(null),
+               informationPackageSizeErrorState = mutableStateOf(null),
+               systemPackageSizeErrorState = mutableStateOf(null)
+            )
          )
       }
 
       Column(modifier = Modifier.padding(10.dp)) {
          Column(modifier = Modifier.weight(1f)) {
             Row {
-               Text(text = "From workstation:", color = if (state.calculationFromErrorContext.workstationFromErrorState.value) Color.Red else Color.Black)
+               Text(
+                  text = "From workstation:",
+                  color = if (state.calculationFromErrorContext.workstationFromErrorState.value) Color.Red else Color.Black
+               )
                Spacer(modifier = Modifier.height(1.dp).width(5.dp))
                DropdownMenu(
-                   toggleModifier = Modifier.wrapContentSize(),
-                   dropdownModifier = Modifier.wrapContentSize(),
-                   toggle = {
-                       Text(state.fromWorkstationState.value?.id?.toString() ?: "Select station", modifier = Modifier
-                           .clickable { state.workstationFromDropDownState.value = true })
-                   },
-                   expanded = state.workstationFromDropDownState.value,
-                   onDismissRequest = { state.workstationFromDropDownState.value = false },
+                  toggleModifier = Modifier.wrapContentSize(),
+                  dropdownModifier = Modifier.wrapContentSize(),
+                  toggle = {
+                     Text(state.fromWorkstationState.value?.id?.toString() ?: "Select station", modifier = Modifier
+                        .clickable { state.workstationFromDropDownState.value = true })
+                  },
+                  expanded = state.workstationFromDropDownState.value,
+                  onDismissRequest = { state.workstationFromDropDownState.value = false },
                ) {
                   for (workstation in workstations.filterIsInstance<ElementWorkstation>()) {
                      DropdownMenuItem(
-                         onClick = {
-                             state.calculationFromErrorContext.workstationFromErrorState.value = false
-                             state.workstationFromDropDownState.value = false
-                             state.fromWorkstationState.value = workstation
-                         }
+                        onClick = {
+                           state.calculationFromErrorContext.workstationFromErrorState.value = false
+                           state.workstationFromDropDownState.value = false
+                           state.fromWorkstationState.value = workstation
+                        }
                      ) { Text(text = workstation.id.toString()) }
                   }
                }
@@ -90,21 +93,21 @@ fun CalculationWindow(
                Text(text = "To workstation:")
                Spacer(modifier = Modifier.height(1.dp).width(5.dp))
                DropdownMenu(
-                   toggleModifier = Modifier.wrapContentSize(),
-                   dropdownModifier = Modifier.wrapContentSize(),
-                   toggle = {
-                       Text(state.toWorkstationState.value?.id?.toString() ?: "All", modifier = Modifier
-                           .clickable { state.workstationToDropDownState.value = true })
-                   },
-                   expanded = state.workstationToDropDownState.value,
-                   onDismissRequest = { state.workstationToDropDownState.value = false }
+                  toggleModifier = Modifier.wrapContentSize(),
+                  dropdownModifier = Modifier.wrapContentSize(),
+                  toggle = {
+                     Text(state.toWorkstationState.value?.id?.toString() ?: "All", modifier = Modifier
+                        .clickable { state.workstationToDropDownState.value = true })
+                  },
+                  expanded = state.workstationToDropDownState.value,
+                  onDismissRequest = { state.workstationToDropDownState.value = false }
                ) {
                   for (workstation in workstations.filterIsInstance<ElementWorkstation>()) {
                      DropdownMenuItem(
-                         onClick = {
-                             state.workstationToDropDownState.value = false
-                             state.toWorkstationState.value = workstation
-                         }
+                        onClick = {
+                           state.workstationToDropDownState.value = false
+                           state.toWorkstationState.value = workstation
+                        }
                      ) { Text(text = workstation.id.toString()) }
                   }
                }
@@ -114,31 +117,34 @@ fun CalculationWindow(
                Text(text = "Message size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
                Spacer(modifier = Modifier.width(width = 5.dp))
                EditText(
-                   error = state.calculationFromErrorContext.messageSizeErrorState.value,
-                   value = state.messageSizeState.value,
-                   onValueChange = { text ->
-                       validateInputToInt(
-                           text,
-                           valueState = state.messageSizeState,
-                           errorState = state.calculationFromErrorContext.messageSizeErrorState
-                       )
-                   }
+                  error = state.calculationFromErrorContext.messageSizeErrorState.value,
+                  value = state.messageSizeState.value,
+                  onValueChange = { text ->
+                     validateInputToInt(
+                        text,
+                        valueState = state.messageSizeState,
+                        errorState = state.calculationFromErrorContext.messageSizeErrorState
+                     )
+                  }
                )
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
             Row {
-               Text(text = "Information package size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+               Text(
+                  text = "Information package size: ",
+                  modifier = Modifier.align(alignment = Alignment.CenterVertically)
+               )
                Spacer(modifier = Modifier.width(width = 5.dp))
                EditText(
-                   error = state.calculationFromErrorContext.informationPackageSizeErrorState.value,
-                   value = state.infoPacketSizeState.value,
-                   onValueChange = { text ->
-                       validateInputToInt(
-                           text,
-                           valueState = state.infoPacketSizeState,
-                           errorState = state.calculationFromErrorContext.informationPackageSizeErrorState
-                       )
-                   }
+                  error = state.calculationFromErrorContext.informationPackageSizeErrorState.value,
+                  value = state.infoPacketSizeState.value,
+                  onValueChange = { text ->
+                     validateInputToInt(
+                        text,
+                        valueState = state.infoPacketSizeState,
+                        errorState = state.calculationFromErrorContext.informationPackageSizeErrorState
+                     )
+                  }
                )
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
@@ -146,15 +152,15 @@ fun CalculationWindow(
                Text(text = "System package size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
                Spacer(modifier = Modifier.width(width = 5.dp))
                EditText(
-                   error = state.calculationFromErrorContext.systemPackageSizeErrorState.value,
-                   value = state.systemPacketSizeState.value,
-                   onValueChange = { text ->
-                       validateInputToInt(
-                           text,
-                           valueState = state.systemPacketSizeState,
-                           errorState = state.calculationFromErrorContext.systemPackageSizeErrorState
-                       )
-                   }
+                  error = state.calculationFromErrorContext.systemPackageSizeErrorState.value,
+                  value = state.systemPacketSizeState.value,
+                  onValueChange = { text ->
+                     validateInputToInt(
+                        text,
+                        valueState = state.systemPacketSizeState,
+                        errorState = state.calculationFromErrorContext.systemPackageSizeErrorState
+                     )
+                  }
                )
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
@@ -163,30 +169,34 @@ fun CalculationWindow(
             ModeRadioButton(state.simulationModeState, Mode.DATAGRAM)
          }
          Button(
-             onClick = {
-                 if (state.fromWorkstationState.value == null) {
-                     state.calculationFromErrorContext.workstationFromErrorState.value = true
-                 } else if (
-                     state.calculationFromErrorContext.informationPackageSizeErrorState.value == null
-                     && state.calculationFromErrorContext.messageSizeErrorState.value == null
-                     && state.calculationFromErrorContext.systemPackageSizeErrorState.value == null
-                 ) {
-                     state.calculationFromErrorContext.workstationFromErrorState.value = false
-                     simulationContext.mode = state.simulationModeState.value
-                     simulationContext.size = state.messageSizeState.value.toInt()
-                     simulationContext.infoPacketSize = state.infoPacketSizeState.value.toInt()
-                     simulationContext.sysPacketSize = state.systemPacketSizeState.value.toInt()
-                     onCalculated(clicked(
-                         workstations = workstations.map { it.mapToAlgorithmEntity() },
-                         lines = lines.map { it.mapToAlgorithmEntity() },
-                         from = state.fromWorkstationState.value!!.mapToAlgorithmEntity(),
-                         to = state.toWorkstationState.value?.mapToAlgorithmEntity()
-                     ))
-                     window.close()
-                 }
+            onClick = {
+               if (state.fromWorkstationState.value == null) {
+                  state.calculationFromErrorContext.workstationFromErrorState.value = true
+               } else if (
+                  state.calculationFromErrorContext.informationPackageSizeErrorState.value == null
+                  && state.calculationFromErrorContext.messageSizeErrorState.value == null
+                  && state.calculationFromErrorContext.systemPackageSizeErrorState.value == null
+               ) {
+                  state.calculationFromErrorContext.workstationFromErrorState.value = false
+                  simulationContext.mode = state.simulationModeState.value
+                  simulationContext.size = state.messageSizeState.value.toInt()
+                  simulationContext.infoPacketSize = state.infoPacketSizeState.value.toInt()
+                  simulationContext.sysPacketSize = state.systemPacketSizeState.value.toInt()
+                  simulationContext.fromId = state.fromWorkstationState.value?.id ?: 0
+                  simulationContext.toId = state.toWorkstationState.value?.id ?: 0
+                  onCalculated(
+                     clicked(
+                        workstations = workstations.map { it.mapToAlgorithmEntity() },
+                        lines = lines.map { it.mapToAlgorithmEntity() },
+                        from = state.fromWorkstationState.value!!.mapToAlgorithmEntity(),
+                        to = state.toWorkstationState.value?.mapToAlgorithmEntity()
+                     )
+                  )
+                  window.close()
+               }
 
-             },
-             modifier = Modifier.fillMaxWidth()
+            },
+            modifier = Modifier.fillMaxWidth()
          ) { Text(text = "Calculate") }
       }
    }
@@ -204,9 +214,9 @@ private fun ModeRadioButton(simulationModeState: MutableState<Mode>, mode: Mode)
 //----------------------------------------------------------------------------------------------------------------------
 
 private fun validateInputToInt(
-    text: String,
-    errorState: MutableState<String?>,
-    valueState: MutableState<String>
+   text: String,
+   errorState: MutableState<String?>,
+   valueState: MutableState<String>
 ) {
    val value = text.toIntOrNull()
    if (value == null) {
@@ -219,10 +229,10 @@ private fun validateInputToInt(
 }
 
 private fun clicked(
-    workstations: List<Workstation>,
-    lines: List<Line>,
-    from: Workstation,
-    to: Workstation?
+   workstations: List<Workstation>,
+   lines: List<Line>,
+   from: Workstation,
+   to: Workstation?
 ): PathCalculationResult {
    val bellmanFordAlgorithm = BellmanFordAlgorithm(workstations, lines)
    if (to == null) return PathCalculationResult(paths = bellmanFordAlgorithm.calculate(from = from))

@@ -75,7 +75,8 @@ fun ElementLine.mapToSimulation(): SimulationConnection = SimulationConnection(
 fun ConnectableElement.mapToSimulation(): SimulationWorkstation = SimulationWorkstation(
     id = id,
     connectionIds = lineIds,
-    network = network
+    network = network,
+    isWorkstation = this is ElementWorkstation
 )
 
 fun ConnectableElement.mapToAlgorithmEntity(): Workstation = Workstation(
