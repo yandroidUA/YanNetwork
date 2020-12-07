@@ -10,6 +10,8 @@ data class SimulationContext(
     val simulationStartedState: MutableState<Boolean>,
     val simulationStoppedState: MutableState<Boolean>,
     val simulationPathState: MutableState<PathResultElements?>,
+    var fromId: Int = 0,
+    var toId: Int = 0,
     var infoPacketSize: Int = 256,
     var sysPacketSize: Int = 10,
     var size: Int = 65536,

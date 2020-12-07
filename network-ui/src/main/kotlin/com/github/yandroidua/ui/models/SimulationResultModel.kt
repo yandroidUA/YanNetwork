@@ -27,7 +27,7 @@ sealed class SimulationResultModel {
       val time: Long
       ) : SimulationResultModel()
 
-   object EndSimulation : SimulationResultModel()
+   data class EndSimulation(val systemBytes: Int, val infoBytes: Int) : SimulationResultModel()
 
    data class ErrorMessageModel(val reason: String) : SimulationResultModel()
 
