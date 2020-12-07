@@ -101,7 +101,9 @@ class DrawerContext(
       simulationContext.next = false
       drawerContext = SupervisorJob() + Dispatchers.Default
       val simulation = configureSimulation()
-      simulation.simulate(drawerScope, createSimulationParams())
+      simulation.simulate(drawerScope, createSimulationParams()).also {
+         simulationContext.startTime = System.currentTimeMillis()
+      }
    }
 
    fun cancelAll() {
@@ -252,6 +254,8 @@ class DrawerContext(
             return err
          }
          is SimulationResultModel.EndSimulation -> {
+            simulationContext.endTime = System.currentTimeMillis()
+            println("Duration: ${simulationContext.endTime - simulationContext.startTime}, start: ${simulationContext.startTime}, end: ${simulationContext.endTime}")
             simulationContext.simulationStartedState.value = false
          }
          else -> onMessageChanged(event)

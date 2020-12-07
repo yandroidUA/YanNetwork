@@ -5,10 +5,7 @@ import com.github.yandroidua.simulation.models.packets.InformationPacket
 import com.github.yandroidua.simulation.models.packets.Packet
 import com.github.yandroidua.simulation.models.packets.PacketType
 import com.github.yandroidua.simulation.models.packets.SystemInformationPacket
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlin.math.ceil
 
@@ -40,7 +37,7 @@ class Simulation(
    }
 
    private fun calculateDelay(connection: SimulationConnection): Long {
-      return 200
+      return 50L * if (connection.type == LineType.HALF_DUPLEX) 2 else 1
    }
 
    private suspend fun onCannotSendByRoutingTable(
@@ -50,12 +47,12 @@ class Simulation(
       routingTables: List<SimulationRoutingTable>,
       packet: Packet,
       handler: suspend (Event, Boolean) -> Boolean
-   ) {
-      val currentWorkstation = findWorkstation(currentWorkstationId) ?: return
-      val neighbourWorkstationId = tryFindNeighbourInSameNetwork(currentWorkstation) ?: return
-      val line = findLineThatConnect(currentWorkstationId, neighbourWorkstationId) ?: return
-      sendPackage(from = currentWorkstationId, to = neighbourWorkstationId, line, packet, 100L, true, handler)
-      sendPackageToEndWithRoutingTable(scope, neighbourWorkstationId, toId, routingTables, packet, handler, true)
+   ): Job {
+      val currentWorkstation = findWorkstation(currentWorkstationId) ?: return Job()
+      val neighbourWorkstationId = tryFindNeighbourInSameNetwork(currentWorkstation) ?: return Job()
+      val line = findLineThatConnect(currentWorkstationId, neighbourWorkstationId) ?: return Job()
+      sendPackage(from = currentWorkstationId, to = neighbourWorkstationId, line, packet, calculateDelay(line), true, handler)
+      return sendPackageToEndWithRoutingTable(scope, neighbourWorkstationId, toId, routingTables, packet, handler, true)
    }
 
    private fun sendPackageToEndWithRoutingTable(
@@ -72,7 +69,10 @@ class Simulation(
          models.find { it.id == toId } as? SimulationWorkstation ?: return@launch
       var nextWorkstationId: Int
 
-      if (!isFromError) addPackageSize(packet)
+      if (!isFromError) {
+         addPackageSize(packet)
+         addPackageSize(SystemInformationPacket(id = -1, size = configuration.frameInformationSize))
+      }
 
       while (fromWorkstationId != toWorkstation.id) {
          val routingTable = routingTables.find { it.id == fromWorkstationId } ?: return@launch //todo send error
@@ -80,11 +80,11 @@ class Simulation(
          val line = findLineThatConnect(fromWorkstationId, nextWorkstationId) ?: return@launch //todo send error
 
          if (!connectionInformation.trySend(line.id)) {
-            onCannotSendByRoutingTable(scope, fromId, toId, routingTables, packet, handler)
+            onCannotSendByRoutingTable(scope, fromId, toId, routingTables, packet, handler).join()
             return@launch
          }
 
-         if (!sendPackage(from = fromWorkstationId, to = nextWorkstationId, line, packet, 100L, true, handler))
+         if (!sendPackage(from = fromWorkstationId, to = nextWorkstationId, line, packet, calculateDelay(line), true, handler))
             return@launch
 
          connectionInformation.release(line.id)
@@ -150,7 +150,7 @@ class Simulation(
          val connection = models.find { it.id == pathEntry.first } as? SimulationConnection ?: return false
          val workstation = models.find { it.id == pathEntry.second } as? SimulationWorkstation ?: return false
 
-         if (!sendPackage(fromWorkstation.id, workstation.id, connection, packet, 100L, useError, handler)) {
+         if (!sendPackage(fromWorkstation.id, workstation.id, connection, packet, calculateDelay(connection), useError, handler)) {
             return sendPackageToEndSuspended(packet, path, useError, handler)
          }
          fromWorkstation = workstation
@@ -222,19 +222,21 @@ class Simulation(
       handler: suspend (Event, Boolean) -> Boolean
    ) {
       val packetCount = calculateInformationPackages()
+      val packageJobs = mutableListOf<Job>()
       repeat(packetCount) {
          val packetId = idGenerator()
-         sendPackageToEndWithRoutingTable(
+         packageJobs.add(sendPackageToEndWithRoutingTable(
             scope,
             from,
             to,
             routingTables,
             InformationPacket(id = packetId, size = configuration.infoPacketSize),
             handler
-         )
+         ))
 //         sendPackageToEnd(scope, InformationPacket(id = packetId, size = 20), path, handler, true)
          delay(1L)
       }
+      packageJobs.joinAll()
       handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes), false)
    }
 
