@@ -287,7 +287,7 @@ class DrawerContext(
       val line = (elementsState.value.find { it.id == model.by }) as? ElementLine ?: return false
       val fromWorkstation = (elementsState.value.find { it.id == model.from })?.center ?: return false
       val toWorkstation = (elementsState.value.find { it.id == model.to })?.center ?: return false
-      val isGonnaHaveTrouble = useError and (random.nextInt(100) <= line.errorChance * 100)
+      val isGonnaHaveTrouble = useError and (random.nextInt(100) < line.errorChance * 100)
       val errorTick = random.nextInt(model.time.toInt())
 
       repeat(model.time.toInt()) {

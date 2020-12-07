@@ -136,6 +136,9 @@ class Simulation(
       handler: suspend (Event, Boolean) -> Boolean
    ) {
       val packetCount = calculateInformationPackages()
+      sendPackageToEndSuspended(SystemInformationPacket(id = idGenerator(), size = 20), path, false, handler)
+      sendPackageToEndSuspended(SystemInformationPacket(id = idGenerator(), size = 20), path.reverse(), false, handler)
+      sendPackageToEndSuspended(SystemInformationPacket(id = idGenerator(), size = 20), path, false, handler)
       repeat(packetCount) {
          val packetId = idGenerator()
          if (sendPackageToEndSuspended(InformationPacket(id = packetId, size = 20), path, true, handler)) {
@@ -145,6 +148,14 @@ class Simulation(
             sendPackageToEndSuspended(InformationPacket(id = packetId, size = 20), path, true, handler)
          }
       }
+      // FIN
+      sendPackageToEndSuspended(SystemInformationPacket(id = idGenerator(), size = 20), path, false, handler)
+      // ACK
+      sendPackageToEndSuspended(SystemInformationPacket(id = idGenerator(), size = 20), path.reverse(), false, handler)
+      // FIN
+      sendPackageToEndSuspended(SystemInformationPacket(id = idGenerator(), size = 20), path.reverse(), false, handler)
+      // ACK
+      sendPackageToEndSuspended(SystemInformationPacket(id = idGenerator(), size = 20), path, false, handler)
    }
 
 }
