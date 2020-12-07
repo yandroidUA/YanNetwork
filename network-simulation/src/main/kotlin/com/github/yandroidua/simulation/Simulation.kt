@@ -73,7 +73,10 @@ class Simulation(
          val connection = models.find { it.id == pathEntry.first } as? SimulationConnection ?: return false
          val workstation = models.find { it.id == pathEntry.second } as? SimulationWorkstation ?: return false
 
-         if (!sendPackage(fromWorkstation.id, workstation.id, connection, packet, 100L, useError, handler)) return false
+         if (!sendPackage(fromWorkstation.id, workstation.id, connection, packet, 100L, useError, handler)) {
+            sendPackageToEndSuspended(packet, path, useError, handler)
+            break
+         }
          fromWorkstation = workstation
       }
       return true
@@ -144,8 +147,6 @@ class Simulation(
          if (sendPackageToEndSuspended(InformationPacket(id = packetId, size = 20), path, true, handler)) {
             //todo here handle HALF_DUPLEX DELAY
             sendPackageToEndSuspended(SystemInformationPacket(id = packetId, size = 20), path.reverse(), false, handler)
-         } else {
-            sendPackageToEndSuspended(InformationPacket(id = packetId, size = 20), path, true, handler)
          }
       }
       // FIN
