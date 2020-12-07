@@ -22,10 +22,12 @@ import com.github.yandroidua.ui.mappers.mapToSimulation
 import com.github.yandroidua.ui.mappers.mapToUiEvent
 import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.models.StartEndOffset
+import com.github.yandroidua.ui.screens.SimulationResultWindow
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
+import javax.swing.SwingUtilities
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.random.Random
@@ -253,11 +255,6 @@ class DrawerContext(
             deleteMessage(event.packetId)
             return err
          }
-         is SimulationResultModel.EndSimulation -> {
-            simulationContext.endTime = System.currentTimeMillis()
-            println("Duration: ${simulationContext.endTime - simulationContext.startTime}, start: ${simulationContext.startTime}, end: ${simulationContext.endTime}")
-            simulationContext.simulationStartedState.value = false
-         }
          else -> onMessageChanged(event)
       }
       return true
@@ -294,13 +291,32 @@ class DrawerContext(
       checkStoppingFlag()
    }
 
+   private fun onSimulationEnded(event: SimulationResultModel.EndSimulation) {
+      simulationContext.simulationStartedState.value = false
+      simulationContext.endTime = System.currentTimeMillis()
+      deleteAllMessages()
+      SwingUtilities.invokeLater {
+         SimulationResultWindow(
+            messageSize = simulationContext.size,
+            frameSystemHeaderSize = -1,
+            packageSystemSize = simulationContext.sysPacketSize,
+            packageInformationSize = simulationContext.infoPacketSize,
+            systemTraffic = event.systemBytes,
+            informationTraffic = event.infoBytes,
+            mode = simulationContext.mode,
+            startTime = simulationContext.startTime,
+            endTime = simulationContext.endTime
+         )
+      }
+   }
+
    private suspend fun onMessageChanged(event: SimulationResultModel) {
       when (event) {
          is SimulationResultModel.TextSimulationModel -> {}
          is SimulationResultModel.MessageStartModel -> createNewMessage(event)
          is SimulationResultModel.MessageMoveModel -> moveMessage(event)
          is SimulationResultModel.ErrorMessageModel -> {}
-         is SimulationResultModel.EndSimulation -> deleteAllMessages()
+         is SimulationResultModel.EndSimulation -> onSimulationEnded(event)
       }
    }
 

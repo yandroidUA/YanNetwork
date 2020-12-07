@@ -35,7 +35,7 @@ fun CalculationWindow(
    simulationContext: SimulationContext,
    onCalculated: (PathCalculationResult) -> Unit
 ) {
-   val window = AppWindow(size = IntSize(600, 400)).also {
+   val window = AppWindow(size = IntSize(600, 1000), title = "Configuration").also {
       it.keyboard.setShortcut(Key.Escape) {
          it.close()
       }
@@ -51,11 +51,13 @@ fun CalculationWindow(
             systemPacketSizeState = mutableStateOf(simulationContext.sysPacketSize.toString()),
             infoPacketSizeState = mutableStateOf(simulationContext.infoPacketSize.toString()),
             simulationModeState = mutableStateOf(simulationContext.mode),
+            frameSysSizeState = mutableStateOf(simulationContext.frameSysSize.toString()),
             calculationFromErrorContext = CalculationFromErrorContext(
                workstationFromErrorState = mutableStateOf(false),
                messageSizeErrorState = mutableStateOf(null),
                informationPackageSizeErrorState = mutableStateOf(null),
-               systemPackageSizeErrorState = mutableStateOf(null)
+               systemPackageSizeErrorState = mutableStateOf(null),
+               frameSysSizeState = mutableStateOf(null)
             )
          )
       }
@@ -164,6 +166,22 @@ fun CalculationWindow(
                )
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
+            Row {
+               Text(text = "Frame system. size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+               Spacer(modifier = Modifier.width(width = 5.dp))
+               EditText(
+                  error = state.calculationFromErrorContext.frameSysSizeState.value,
+                  value = state.frameSysSizeState.value,
+                  onValueChange = { text ->
+                     validateInputToInt(
+                        text,
+                        valueState = state.frameSysSizeState,
+                        errorState = state.calculationFromErrorContext.frameSysSizeState
+                     )
+                  }
+               )
+            }
+            Spacer(modifier = Modifier.height(height = 8.dp))
             ModeRadioButton(state.simulationModeState, Mode.LOGICAL)
             Spacer(modifier = Modifier.height(height = 4.dp))
             ModeRadioButton(state.simulationModeState, Mode.DATAGRAM)
@@ -176,6 +194,7 @@ fun CalculationWindow(
                   state.calculationFromErrorContext.informationPackageSizeErrorState.value == null
                   && state.calculationFromErrorContext.messageSizeErrorState.value == null
                   && state.calculationFromErrorContext.systemPackageSizeErrorState.value == null
+                  && state.calculationFromErrorContext.frameSysSizeState.value == null
                ) {
                   state.calculationFromErrorContext.workstationFromErrorState.value = false
                   simulationContext.mode = state.simulationModeState.value
@@ -184,6 +203,7 @@ fun CalculationWindow(
                   simulationContext.sysPacketSize = state.systemPacketSizeState.value.toInt()
                   simulationContext.fromId = state.fromWorkstationState.value?.id ?: 0
                   simulationContext.toId = state.toWorkstationState.value?.id ?: 0
+                  simulationContext.frameSysSize = state.frameSysSizeState.value.toInt()
                   onCalculated(
                      clicked(
                         workstations = workstations.map { it.mapToAlgorithmEntity() },

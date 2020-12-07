@@ -16,6 +16,7 @@ data class SimulationContext(
     var toId: Int = 0,
     var infoPacketSize: Int = 256,
     var sysPacketSize: Int = 10,
+    var frameSysSize: Int = 10,
     var size: Int = 65536,
     var resultInfoSize: Int = 0,
     var resultSysSize: Int = 0,
