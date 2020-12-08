@@ -209,7 +209,7 @@ class DrawerContext(
 
    private fun createSimulationParams(): SimulationParams {
       return when (simulationContext.mode) {
-         Mode.LOGICAL -> createLogicalParams()
+         Mode.LOGICAL, Mode.VIRTUAL -> createLogicalParams()
          Mode.DATAGRAM -> createDatagramParams()
       }
    }

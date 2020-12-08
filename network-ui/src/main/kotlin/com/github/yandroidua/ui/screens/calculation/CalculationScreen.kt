@@ -186,6 +186,8 @@ fun CalculationWindow(
             ModeRadioButton(state.simulationModeState, Mode.LOGICAL)
             Spacer(modifier = Modifier.height(height = 4.dp))
             ModeRadioButton(state.simulationModeState, Mode.DATAGRAM)
+            Spacer(modifier = Modifier.height(height = 4.dp))
+            ModeRadioButton(state.simulationModeState, Mode.VIRTUAL)
             Spacer(modifier = Modifier.height(height = 8.dp))
             Row {
                Text("By Stations", modifier = Modifier.align(alignment = Alignment.CenterVertically))

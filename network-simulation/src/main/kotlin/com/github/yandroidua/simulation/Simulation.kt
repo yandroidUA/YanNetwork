@@ -164,8 +164,10 @@ class Simulation(
          PacketType.INFORMATION -> {
             println("Adding ${packet.size} to INFO TRAFFIC")
             infoPackagesBytes += packet.size
-            if (isUDP) {
-               systemPackagesBytes += configuration.udpHeaderSize
+            systemPackagesBytes += if (isUDP) {
+               configuration.udpHeaderSize
+            } else {
+               configuration.tcpHeaderSize
             }
          }
          PacketType.SYSTEM -> {
