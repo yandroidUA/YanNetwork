@@ -24,8 +24,6 @@ import com.github.yandroidua.ui.models.SimulationResultModel
 import com.github.yandroidua.ui.models.StartEndOffset
 import com.github.yandroidua.ui.screens.SimulationResultWindow
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import javax.swing.SwingUtilities
 import kotlin.coroutines.CoroutineContext
@@ -298,8 +296,8 @@ class DrawerContext(
       SwingUtilities.invokeLater {
          SimulationResultWindow(
             messageSize = simulationContext.size,
-            frameSystemHeaderSize = -1,
-            packageSystemSize = simulationContext.sysPacketSize,
+            udpHeader = simulationContext.udpHeaderSize,
+            tcpHeader = simulationContext.tcpHeaderSize,
             packageInformationSize = simulationContext.infoPacketSize,
             systemTraffic = event.systemBytes,
             informationTraffic = event.infoBytes,
@@ -364,7 +362,7 @@ class DrawerContext(
          configuration = buildConfiguration {
             path = simulationContext.simulationPathState.value!!.mapToSimulation()
             infoPacketSize = simulationContext.infoPacketSize
-            sysPacketSize = simulationContext.sysPacketSize
+            tcpHeaderSize = simulationContext.tcpHeaderSize
             size = simulationContext.size
             mode = simulationContext.mode
          },

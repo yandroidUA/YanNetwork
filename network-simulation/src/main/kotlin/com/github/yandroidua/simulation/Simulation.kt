@@ -71,7 +71,7 @@ class Simulation(
 
       if (!isFromError) {
          addPackageSize(packet)
-         addPackageSize(SystemInformationPacket(id = -1, size = configuration.frameInformationSize))
+         addPackageSize(SystemInformationPacket(id = -1, size = configuration.udpHeaderSize))
       }
 
       while (fromWorkstationId != toWorkstation.id) {
@@ -162,12 +162,14 @@ class Simulation(
       counterMutex.lock()
       when (packet.type) {
          PacketType.INFORMATION -> {
+            println("Adding ${packet.size} to INFO TRAFFIC")
             infoPackagesBytes += packet.size
             if (isUDP) {
-               systemPackagesBytes += configuration.frameInformationSize
+               systemPackagesBytes += configuration.udpHeaderSize
             }
          }
          PacketType.SYSTEM -> {
+            println("Adding ${packet.size} to SYS TRAFFIC")
             systemPackagesBytes += packet.size
          }
          PacketType.ERROR -> {
@@ -249,19 +251,19 @@ class Simulation(
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.frameInformationSize + configuration.sysPacketSize
+            size = configuration.tcpHeaderSize
          ), path, false, handler
       )
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.frameInformationSize + configuration.sysPacketSize
+            size = configuration.tcpHeaderSize
          ), path.reverse(), false, handler
       )
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.frameInformationSize + configuration.sysPacketSize
+            size = configuration.tcpHeaderSize
          ), path, false, handler
       )
       repeat(packetCount) {
@@ -269,15 +271,14 @@ class Simulation(
          if (sendPackageToEndSuspended(
                InformationPacket(
                   id = packetId,
-                  size = minOf(configuration.packetInformationSize, configuration.infoPacketSize)
+                  size = configuration.infoPacketSize
                ), path, true, handler
             )
          ) {
-            //todo here handle HALF_DUPLEX DELAY
             sendPackageToEndSuspended(
                SystemInformationPacket(
                   id = packetId,
-                  size = configuration.frameInformationSize + configuration.sysPacketSize
+                  size = configuration.tcpHeaderSize
                ), path.reverse(), false, handler
             )
          }
@@ -286,28 +287,28 @@ class Simulation(
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.frameInformationSize + configuration.sysPacketSize
+            size = configuration.tcpHeaderSize
          ), path, false, handler
       )
       // ACK
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.frameInformationSize + configuration.sysPacketSize
+            size = configuration.tcpHeaderSize
          ), path.reverse(), false, handler
       )
       // FIN
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.frameInformationSize + configuration.sysPacketSize
+            size = configuration.tcpHeaderSize
          ), path.reverse(), false, handler
       )
       // ACK
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.frameInformationSize + configuration.sysPacketSize
+            size = configuration.tcpHeaderSize
          ), path, false, handler
       )
       handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes), false)

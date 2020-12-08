@@ -10,8 +10,7 @@ data class Configuration(
         var path: SimulationPath? = null,
         var mode: Mode = Mode.LOGICAL,
         var infoPacketSize: Int = 0,
-        var sysPacketSize: Int = 0,
+        var tcpHeaderSize: Int = 16,
         var size: Int = 0,
-        var frameInformationSize: Int = 10,
-        var packetInformationSize: Int = 40
+        var udpHeaderSize: Int = 8
 )

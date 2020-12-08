@@ -10,8 +10,8 @@ data class CalculationContext(
     val workstationFromDropDownState: MutableState<Boolean>,
     val workstationToDropDownState: MutableState<Boolean>,
     val messageSizeState: MutableState<String>,
-    val systemPacketSizeState: MutableState<String>,
-    val frameSysSizeState: MutableState<String>,
+    val tcpHeaderState: MutableState<String>,
+    val udpHeaderSizeState: MutableState<String>,
     val infoPacketSizeState: MutableState<String>,
     val simulationModeState: MutableState<Mode>,
     val calculationFromErrorContext: CalculationFromErrorContext

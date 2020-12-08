@@ -12,9 +12,9 @@ import java.util.*
 
 fun SimulationResultWindow(
    messageSize: Int,
-   frameSystemHeaderSize: Int,
+   udpHeader: Int,
    packageInformationSize: Int,
-   packageSystemSize: Int,
+   tcpHeader: Int,
    informationTraffic: Int,
    systemTraffic: Int,
    mode: Mode,
@@ -25,11 +25,11 @@ fun SimulationResultWindow(
    Column(modifier = Modifier.fillMaxWidth()) {
       Text(text = "Message size: $messageSize")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "Frame header size: $frameSystemHeaderSize")
+      Text(text = "UDP header size: $udpHeader")
+      Spacer(modifier = Modifier.height(height = 4.dp))
+      Text(text = "TCP package size: $tcpHeader")
       Spacer(modifier = Modifier.height(height = 4.dp))
       Text(text = "Info. package size: $packageInformationSize")
-      Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "Sys. package size: $packageSystemSize")
       Spacer(modifier = Modifier.height(height = 4.dp))
       Text(text = "Info. traffic: $informationTraffic")
       Spacer(modifier = Modifier.height(height = 4.dp))
@@ -37,7 +37,7 @@ fun SimulationResultWindow(
       Spacer(modifier = Modifier.height(height = 4.dp))
       Text(text = "Start time: $startTime (${simpleDateFormat.format(Date(startTime))})")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "End time: $endTime (${simpleDateFormat.format(Date(startTime))})")
+      Text(text = "End time: $endTime (${simpleDateFormat.format(Date(endTime))})")
       Spacer(modifier = Modifier.height(height = 4.dp))
       Text(text = "Duration: ${endTime - startTime} millis")
       Spacer(modifier = Modifier.height(height = 4.dp))

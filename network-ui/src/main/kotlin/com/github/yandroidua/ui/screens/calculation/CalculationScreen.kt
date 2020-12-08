@@ -48,16 +48,16 @@ fun CalculationWindow(
             workstationFromDropDownState = mutableStateOf(false),
             workstationToDropDownState = mutableStateOf(false),
             messageSizeState = mutableStateOf(simulationContext.size.toString()),
-            systemPacketSizeState = mutableStateOf(simulationContext.sysPacketSize.toString()),
+            tcpHeaderState = mutableStateOf(simulationContext.tcpHeaderSize.toString()),
             infoPacketSizeState = mutableStateOf(simulationContext.infoPacketSize.toString()),
             simulationModeState = mutableStateOf(simulationContext.mode),
-            frameSysSizeState = mutableStateOf(simulationContext.frameSysSize.toString()),
+            udpHeaderSizeState = mutableStateOf(simulationContext.udpHeaderSize.toString()),
             calculationFromErrorContext = CalculationFromErrorContext(
                workstationFromErrorState = mutableStateOf(false),
                messageSizeErrorState = mutableStateOf(null),
                informationPackageSizeErrorState = mutableStateOf(null),
-               systemPackageSizeErrorState = mutableStateOf(null),
-               frameSysSizeState = mutableStateOf(null)
+               tcpHeaderError = mutableStateOf(null),
+               udpHeaderSizeState = mutableStateOf(null)
             )
          )
       }
@@ -151,32 +151,32 @@ fun CalculationWindow(
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
             Row {
-               Text(text = "System package size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+               Text(text = "TCP header size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
                Spacer(modifier = Modifier.width(width = 5.dp))
                EditText(
-                  error = state.calculationFromErrorContext.systemPackageSizeErrorState.value,
-                  value = state.systemPacketSizeState.value,
+                  error = state.calculationFromErrorContext.tcpHeaderError.value,
+                  value = state.tcpHeaderState.value,
                   onValueChange = { text ->
                      validateInputToInt(
                         text,
-                        valueState = state.systemPacketSizeState,
-                        errorState = state.calculationFromErrorContext.systemPackageSizeErrorState
+                        valueState = state.tcpHeaderState,
+                        errorState = state.calculationFromErrorContext.tcpHeaderError
                      )
                   }
                )
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
             Row {
-               Text(text = "Frame system. size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+               Text(text = "UDP header size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
                Spacer(modifier = Modifier.width(width = 5.dp))
                EditText(
-                  error = state.calculationFromErrorContext.frameSysSizeState.value,
-                  value = state.frameSysSizeState.value,
+                  error = state.calculationFromErrorContext.udpHeaderSizeState.value,
+                  value = state.udpHeaderSizeState.value,
                   onValueChange = { text ->
                      validateInputToInt(
                         text,
-                        valueState = state.frameSysSizeState,
-                        errorState = state.calculationFromErrorContext.frameSysSizeState
+                        valueState = state.udpHeaderSizeState,
+                        errorState = state.calculationFromErrorContext.udpHeaderSizeState
                      )
                   }
                )
@@ -193,17 +193,17 @@ fun CalculationWindow(
                } else if (
                   state.calculationFromErrorContext.informationPackageSizeErrorState.value == null
                   && state.calculationFromErrorContext.messageSizeErrorState.value == null
-                  && state.calculationFromErrorContext.systemPackageSizeErrorState.value == null
-                  && state.calculationFromErrorContext.frameSysSizeState.value == null
+                  && state.calculationFromErrorContext.tcpHeaderError.value == null
+                  && state.calculationFromErrorContext.udpHeaderSizeState.value == null
                ) {
                   state.calculationFromErrorContext.workstationFromErrorState.value = false
                   simulationContext.mode = state.simulationModeState.value
                   simulationContext.size = state.messageSizeState.value.toInt()
                   simulationContext.infoPacketSize = state.infoPacketSizeState.value.toInt()
-                  simulationContext.sysPacketSize = state.systemPacketSizeState.value.toInt()
+                  simulationContext.tcpHeaderSize = state.tcpHeaderState.value.toInt()
                   simulationContext.fromId = state.fromWorkstationState.value?.id ?: 0
                   simulationContext.toId = state.toWorkstationState.value?.id ?: 0
-                  simulationContext.frameSysSize = state.frameSysSizeState.value.toInt()
+                  simulationContext.udpHeaderSize = state.udpHeaderSizeState.value.toInt()
                   onCalculated(
                      clicked(
                         workstations = workstations.map { it.mapToAlgorithmEntity() },
