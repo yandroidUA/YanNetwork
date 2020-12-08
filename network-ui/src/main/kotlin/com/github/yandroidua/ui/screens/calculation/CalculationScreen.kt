@@ -52,6 +52,7 @@ fun CalculationWindow(
             infoPacketSizeState = mutableStateOf(simulationContext.infoPacketSize.toString()),
             simulationModeState = mutableStateOf(simulationContext.mode),
             udpHeaderSizeState = mutableStateOf(simulationContext.udpHeaderSize.toString()),
+            byLengthState = mutableStateOf(simulationContext.byLength),
             calculationFromErrorContext = CalculationFromErrorContext(
                workstationFromErrorState = mutableStateOf(false),
                messageSizeErrorState = mutableStateOf(null),
@@ -185,6 +186,18 @@ fun CalculationWindow(
             ModeRadioButton(state.simulationModeState, Mode.LOGICAL)
             Spacer(modifier = Modifier.height(height = 4.dp))
             ModeRadioButton(state.simulationModeState, Mode.DATAGRAM)
+            Spacer(modifier = Modifier.height(height = 8.dp))
+            Row {
+               Text("By Stations", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+               Spacer(modifier = Modifier.width(width = 4.dp))
+               Switch(
+                  checked = state.byLengthState.value,
+                  onCheckedChange = { state.byLengthState.value = it },
+                  modifier = Modifier.align(alignment = Alignment.CenterVertically)
+               )
+               Spacer(modifier = Modifier.width(width = 4.dp))
+               Text("By Length", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+            }
          }
          Button(
             onClick = {
@@ -204,12 +217,14 @@ fun CalculationWindow(
                   simulationContext.fromId = state.fromWorkstationState.value?.id ?: 0
                   simulationContext.toId = state.toWorkstationState.value?.id ?: 0
                   simulationContext.udpHeaderSize = state.udpHeaderSizeState.value.toInt()
+                  simulationContext.byLength = state.byLengthState.value
                   onCalculated(
                      clicked(
                         workstations = workstations.map { it.mapToAlgorithmEntity() },
                         lines = lines.map { it.mapToAlgorithmEntity() },
                         from = state.fromWorkstationState.value!!.mapToAlgorithmEntity(),
-                        to = state.toWorkstationState.value?.mapToAlgorithmEntity()
+                        to = state.toWorkstationState.value?.mapToAlgorithmEntity(),
+                        byLength = state.byLengthState.value
                      )
                   )
                   window.close()
@@ -252,9 +267,10 @@ private fun clicked(
    workstations: List<Workstation>,
    lines: List<Line>,
    from: Workstation,
+   byLength: Boolean,
    to: Workstation?
 ): PathCalculationResult {
    val bellmanFordAlgorithm = BellmanFordAlgorithm(workstations, lines)
-   if (to == null) return PathCalculationResult(paths = bellmanFordAlgorithm.calculate(from = from))
-   return PathCalculationResult(paths = bellmanFordAlgorithm.calculate(from = from, to = to))
+   if (to == null) return PathCalculationResult(paths = bellmanFordAlgorithm.calculate(from = from, byLength = byLength))
+   return PathCalculationResult(paths = bellmanFordAlgorithm.calculate(from = from, to = to, byLength = byLength))
 }

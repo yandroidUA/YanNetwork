@@ -14,5 +14,6 @@ data class CalculationContext(
     val udpHeaderSizeState: MutableState<String>,
     val infoPacketSizeState: MutableState<String>,
     val simulationModeState: MutableState<Mode>,
+    val byLengthState: MutableState<Boolean>,
     val calculationFromErrorContext: CalculationFromErrorContext
 )

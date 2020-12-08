@@ -17,6 +17,7 @@ data class SimulationContext(
     var infoPacketSize: Int = 256,
     var tcpHeaderSize: Int = 16,
     var udpHeaderSize: Int = 8,
+    var byLength: Boolean = true,
     var size: Int = 65536,
     var resultInfoSize: Int = 0,
     var resultSysSize: Int = 0,

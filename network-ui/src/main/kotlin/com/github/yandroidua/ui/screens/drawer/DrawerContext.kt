@@ -270,7 +270,7 @@ class DrawerContext(
       return routingTable.routingTable { from, to ->
          val fromWorkstation = connectableElements.find { it.id == from } ?: return@routingTable null
          val toWorkstation = connectableElements.find { it.id == to } ?: return@routingTable null
-         alg.calculate(from = fromWorkstation.mapToAlgorithmEntity(), to = toWorkstation.mapToAlgorithmEntity())
+         alg.calculate(from = fromWorkstation.mapToAlgorithmEntity(), to = toWorkstation.mapToAlgorithmEntity(), byLength = true)
             .minByOrNull { it.summary }
             ?.mapToSimulation()
       }
