@@ -57,10 +57,13 @@ class BellmanFordAlgorithm(
         val path = mutableListOf<Pair<Int, Int>>()
         var summaryWeight = 0
         var realWeight = 0
+        var tries = 0
 
         while (currentWorkstation != from.number) {
-
             for (workstation in workstations) {
+                if (tries == workstations.size) return
+                tries++
+
                 if (currentWorkstation == from.number) {
                     path.add(-1 to currentWorkstation)
                     break
