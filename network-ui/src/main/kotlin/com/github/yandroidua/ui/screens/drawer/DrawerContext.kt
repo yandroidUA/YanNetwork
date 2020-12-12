@@ -71,7 +71,7 @@ class DrawerContext(
 ) {
 
    companion object {
-      private val LINE_WEIGHTS = arrayOf(2, 3, 6, 7, 9, 10, 12, 16, 18, 21, 22, 30, 32)
+      private val LINE_WEIGHTS = arrayOf(4, 5, 7, 8, 11, 14, 15, 18, 21, 22, 27, 28)
    }
 
    private val random = Random(System.currentTimeMillis())
@@ -184,18 +184,25 @@ class DrawerContext(
       return true
    }
 
-   fun onCanvasTyped(position: Offset, onElementDetected: (Element) -> Unit) {
-      selectedElementState.value = null
+   fun onCanvasTyped(position: Offset): Element? {
+//      lineCreationLastTouchOffset = null
       // check if clicked on item
-      if (onTypedOnElement(position, onElementDetected)) return
-      val currentSelectedElementType = selectedElementType ?: return
+      val clickedElement = onTypedOnElement(position)
+      if (clickedElement != null) {
+         return clickedElement
+//         onElementDetected(clickedElement)
+//         selectedElementState.value = clickedElement
+      }
+      val currentSelectedElementType = selectedElementType ?: return null
       when (currentSelectedElementType) {
          ElementType.WORKSTATION -> onWorkstationCreate(position)
          ElementType.COMMUNICATION_NODE -> onCommunicationNodeCreate(position)
          ElementType.LINE -> onLineCreate(position)
-         ElementType.MESSAGE -> {
-         }
+         ElementType.MESSAGE -> {}
       }
+//      selectedElementType = null
+//      selectedElementState.value = null
+      return null
    }
 
    fun findConnections(element: Element): List<SimulationRoutingTableEntry> {
@@ -501,23 +508,17 @@ class DrawerContext(
          ?: elementsState.value.find { it.isInOffset(click) }
    }
 
-   private fun onTypedOnElement(position: Offset, onElementDetected: (Element) -> Unit): Boolean {
-      val clickedElement = findElementOrNull(position) ?: return false
+   private fun onTypedOnElement(position: Offset): Element? {
+      val clickedElement = findElementOrNull(position) ?: return null
       return when (clickedElement.type) {
          ElementType.WORKSTATION, ElementType.COMMUNICATION_NODE -> {
             // if clicked on workstation and current selected element is LINE it can be
             // process of linking stations so need get chance to handle this event to others
-            if (selectedElementType == ElementType.LINE) return false
-            selectedElementState.value = clickedElement
-            onElementDetected(clickedElement)
-            true
+            if (selectedElementType == ElementType.LINE) return null
+            clickedElement
          }
-         ElementType.LINE -> {
-            selectedElementState.value = clickedElement
-            onElementDetected(clickedElement)
-            true
-         }
-         ElementType.MESSAGE -> false
+         ElementType.LINE -> clickedElement
+         ElementType.MESSAGE -> null
       }
    }
 

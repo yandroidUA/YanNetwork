@@ -1,9 +1,9 @@
 package com.github.yandroidua.simulation.models
 
-enum class LineType(val id: Int) {
-    DUPLEX(0),
-    HALF_DUPLEX(1),
-    SATELLITE(2);
+enum class LineType(val id: Int, val uiName: String) {
+    DUPLEX(0, "Дуплексний"),
+    HALF_DUPLEX(1, "Напівдуплексний"),
+    SATELLITE(2, "Супутниковий");
 
     companion object {
         fun fromId(id: Int): LineType? {

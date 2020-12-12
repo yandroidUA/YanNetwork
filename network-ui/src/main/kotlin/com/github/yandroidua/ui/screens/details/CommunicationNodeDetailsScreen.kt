@@ -13,6 +13,7 @@ import com.github.yandroidua.simulation.models.SimulationRoutingTableEntry
 import com.github.yandroidua.ui.components.EditText
 import com.github.yandroidua.ui.components.RouteTable
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
+import com.github.yandroidua.ui.utils.VovaTheming
 
 
 @Composable
@@ -26,14 +27,14 @@ fun CommunicationNodeDetailsScreen(
    val networkState = remember { mutableStateOf(elementCommunicationNode.network) }
    Column(modifier = Modifier.weight(1f)) {
       Text(
-         text = "This is ElementCommunicationNode#${elementCommunicationNode.id}",
+         text = "Комунікаційний вузол №${elementCommunicationNode.id}",
          modifier = Modifier
             .wrapContentWidth(align = Alignment.CenterHorizontally)
             .align(alignment = Alignment.CenterHorizontally)
       )
       Spacer(modifier = Modifier.height(height = 8.dp))
       Row {
-         Text(text = "Network:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+         Text(text = "Мережа:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
          Spacer(modifier = Modifier.width(width = 4.dp))
          EditText(
             value = networkState.value ?: "NaN",
@@ -43,14 +44,21 @@ fun CommunicationNodeDetailsScreen(
       Spacer(modifier = Modifier.height(height = 8.dp))
       RouteTable(connections)
    }
-   Button(onClick = { deleter(elementCommunicationNode) }, modifier = Modifier.fillMaxWidth()) {
-      Text(text = "Delete", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
+   Button(
+      colors = VovaTheming.buttonColors(),
+      onClick = { deleter(elementCommunicationNode) },
+      modifier = Modifier.fillMaxWidth()
+   ) {
+      Text(text = "Видалити", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
    }
    Spacer(modifier = Modifier.height(height = 4.dp))
-   Button(onClick = {
-      elementCommunicationNode.network = networkState.value
-      saver(elementCommunicationNode)
-   }, modifier = Modifier.fillMaxWidth()) {
-      Text(text = "Save", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
+   Button(
+      colors = VovaTheming.buttonColors(),
+      onClick = {
+         elementCommunicationNode.network = networkState.value
+         saver(elementCommunicationNode)
+      }, modifier = Modifier.fillMaxWidth()
+   ) {
+      Text(text = "Зберегти", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
    }
 }

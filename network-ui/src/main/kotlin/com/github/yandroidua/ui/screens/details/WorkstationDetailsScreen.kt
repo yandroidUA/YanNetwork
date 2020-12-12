@@ -13,6 +13,7 @@ import com.github.yandroidua.simulation.models.SimulationRoutingTableEntry
 import com.github.yandroidua.ui.components.EditText
 import com.github.yandroidua.ui.components.RouteTable
 import com.github.yandroidua.ui.elements.ElementWorkstation
+import com.github.yandroidua.ui.utils.VovaTheming
 
 @Composable
 fun WorkstationDetails(
@@ -25,14 +26,14 @@ fun WorkstationDetails(
    val workstationNetworkState = remember { mutableStateOf(elementWorkstation.network) }
    Column(modifier = Modifier.weight(1f)) {
       Text(
-         text = "This is Workstation#${elementWorkstation.id}",
+         text = "Робоча станція №${elementWorkstation.id}",
          modifier = Modifier
             .wrapContentWidth(align = Alignment.CenterHorizontally)
             .align(alignment = Alignment.CenterHorizontally)
       )
       Spacer(modifier = Modifier.height(height = 8.dp))
       Row {
-         Text(text = "Network:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+         Text(text = "Мережа:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
          Spacer(modifier = Modifier.width(width = 4.dp))
          EditText(
             value = workstationNetworkState.value ?: "NaN",
@@ -42,14 +43,21 @@ fun WorkstationDetails(
       Spacer(modifier = Modifier.height(height = 8.dp))
       RouteTable(connections)
    }
-   Button(onClick = { deleter(elementWorkstation) }, modifier = Modifier.fillMaxWidth()) {
-      Text(text = "Delete", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
+   Button(
+      colors = VovaTheming.buttonColors(),
+      onClick = { deleter(elementWorkstation) },
+      modifier = Modifier.fillMaxWidth()
+   ) {
+      Text(text = "Видалити", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
    }
    Spacer(modifier = Modifier.height(height = 4.dp))
-   Button(onClick = {
-      elementWorkstation.network = workstationNetworkState.value
-      saver(elementWorkstation)
-   }, modifier = Modifier.fillMaxWidth()) {
-      Text(text = "Save", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
+   Button(
+      colors = VovaTheming.buttonColors(),
+      onClick = {
+         elementWorkstation.network = workstationNetworkState.value
+         saver(elementWorkstation)
+      }, modifier = Modifier.fillMaxWidth()
+   ) {
+      Text(text = "Зберегти", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
    }
 }

@@ -3,6 +3,7 @@ package com.github.yandroidua.ui.screens.calculation
 import androidx.compose.desktop.AppWindow
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +28,7 @@ import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.mappers.mapToAlgorithmEntity
 import com.github.yandroidua.ui.models.PathCalculationResult
 import com.github.yandroidua.ui.screens.drawer.SimulationContext
+import com.github.yandroidua.ui.utils.VovaTheming
 
 @OptIn(ExperimentalKeyInput::class)
 fun CalculationWindow(
@@ -35,7 +37,7 @@ fun CalculationWindow(
    simulationContext: SimulationContext,
    onCalculated: (PathCalculationResult) -> Unit
 ) {
-   val window = AppWindow(size = IntSize(600, 1000), title = "Configuration").also {
+   val window = AppWindow(size = IntSize(600, 1000), title = "Налаштування симуляції").also {
       it.keyboard.setShortcut(Key.Escape) {
          it.close()
       }
@@ -63,11 +65,11 @@ fun CalculationWindow(
          )
       }
 
-      Column(modifier = Modifier.padding(10.dp)) {
-         Column(modifier = Modifier.weight(1f)) {
+      Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
+         Column(modifier = Modifier.fillMaxSize().weight(1f)) {
             Row {
                Text(
-                  text = "From workstation:",
+                  text = "Станція-відпраник:",
                   color = if (state.calculationFromErrorContext.workstationFromErrorState.value) Color.Red else Color.Black
                )
                Spacer(modifier = Modifier.height(1.dp).width(5.dp))
@@ -75,7 +77,7 @@ fun CalculationWindow(
                   toggleModifier = Modifier.wrapContentSize(),
                   dropdownModifier = Modifier.wrapContentSize(),
                   toggle = {
-                     Text(state.fromWorkstationState.value?.id?.toString() ?: "Select station", modifier = Modifier
+                     Text(state.fromWorkstationState.value?.id?.toString() ?: "Оберіть станцію", modifier = Modifier
                         .clickable { state.workstationFromDropDownState.value = true })
                   },
                   expanded = state.workstationFromDropDownState.value,
@@ -93,13 +95,13 @@ fun CalculationWindow(
                }
             }
             Row {
-               Text(text = "To workstation:")
+               Text(text = "Станція отримувач:")
                Spacer(modifier = Modifier.height(1.dp).width(5.dp))
                DropdownMenu(
                   toggleModifier = Modifier.wrapContentSize(),
                   dropdownModifier = Modifier.wrapContentSize(),
                   toggle = {
-                     Text(state.toWorkstationState.value?.id?.toString() ?: "All", modifier = Modifier
+                     Text(state.toWorkstationState.value?.id?.toString() ?: "Усі", modifier = Modifier
                         .clickable { state.workstationToDropDownState.value = true })
                   },
                   expanded = state.workstationToDropDownState.value,
@@ -117,7 +119,7 @@ fun CalculationWindow(
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
             Row {
-               Text(text = "Message size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+               Text(text = "Розмір повідомлення: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
                Spacer(modifier = Modifier.width(width = 5.dp))
                EditText(
                   error = state.calculationFromErrorContext.messageSizeErrorState.value,
@@ -134,7 +136,7 @@ fun CalculationWindow(
             Spacer(modifier = Modifier.height(height = 8.dp))
             Row {
                Text(
-                  text = "Information package size: ",
+                  text = "Розмір інформаційної частини в пакеті: ",
                   modifier = Modifier.align(alignment = Alignment.CenterVertically)
                )
                Spacer(modifier = Modifier.width(width = 5.dp))
@@ -151,46 +153,25 @@ fun CalculationWindow(
                )
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
-            Row {
-               Text(text = "TCP header size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
-               Spacer(modifier = Modifier.width(width = 5.dp))
-               EditText(
-                  error = state.calculationFromErrorContext.tcpHeaderError.value,
-                  value = state.tcpHeaderState.value,
-                  onValueChange = { text ->
-                     validateInputToInt(
-                        text,
-                        valueState = state.tcpHeaderState,
-                        errorState = state.calculationFromErrorContext.tcpHeaderError
-                     )
-                  }
-               )
+            Column(
+               modifier = Modifier
+                  .wrapContentSize()
+                  .align(alignment = Alignment.CenterHorizontally)
+                  .border(
+                     shape = RoundedCornerShape(size = 4.dp),
+                     color = Color.Black,
+                     width = 2.dp
+                  ).padding(all = 8.dp)
+            ) {
+               ModeRadioButton(state.simulationModeState, Mode.LOGICAL)
+               Spacer(modifier = Modifier.height(height = 4.dp))
+               ModeRadioButton(state.simulationModeState, Mode.DATAGRAM)
+               Spacer(modifier = Modifier.height(height = 4.dp))
+               ModeRadioButton(state.simulationModeState, Mode.VIRTUAL)
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
             Row {
-               Text(text = "UDP header size: ", modifier = Modifier.align(alignment = Alignment.CenterVertically))
-               Spacer(modifier = Modifier.width(width = 5.dp))
-               EditText(
-                  error = state.calculationFromErrorContext.udpHeaderSizeState.value,
-                  value = state.udpHeaderSizeState.value,
-                  onValueChange = { text ->
-                     validateInputToInt(
-                        text,
-                        valueState = state.udpHeaderSizeState,
-                        errorState = state.calculationFromErrorContext.udpHeaderSizeState
-                     )
-                  }
-               )
-            }
-            Spacer(modifier = Modifier.height(height = 8.dp))
-            ModeRadioButton(state.simulationModeState, Mode.LOGICAL)
-            Spacer(modifier = Modifier.height(height = 4.dp))
-            ModeRadioButton(state.simulationModeState, Mode.DATAGRAM)
-            Spacer(modifier = Modifier.height(height = 4.dp))
-            ModeRadioButton(state.simulationModeState, Mode.VIRTUAL)
-            Spacer(modifier = Modifier.height(height = 8.dp))
-            Row {
-               Text("By Stations", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+               Text("Найменша кількість станцій", modifier = Modifier.align(alignment = Alignment.CenterVertically))
                Spacer(modifier = Modifier.width(width = 4.dp))
                Switch(
                   checked = state.byLengthState.value,
@@ -198,10 +179,11 @@ fun CalculationWindow(
                   modifier = Modifier.align(alignment = Alignment.CenterVertically)
                )
                Spacer(modifier = Modifier.width(width = 4.dp))
-               Text("By Length", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+               Text("Найменша вага", modifier = Modifier.align(alignment = Alignment.CenterVertically))
             }
          }
          Button(
+            colors = VovaTheming.buttonColors(),
             onClick = {
                if (state.fromWorkstationState.value == null) {
                   state.calculationFromErrorContext.workstationFromErrorState.value = true
@@ -234,7 +216,7 @@ fun CalculationWindow(
 
             },
             modifier = Modifier.fillMaxWidth()
-         ) { Text(text = "Calculate") }
+         ) { Text(text = "Вирахувати") }
       }
    }
 }
@@ -244,7 +226,7 @@ private fun ModeRadioButton(simulationModeState: MutableState<Mode>, mode: Mode)
    Row {
       RadioButton(selected = simulationModeState.value == mode, onClick = { simulationModeState.value = mode })
       Spacer(modifier = Modifier.width(width = 4.dp))
-      Text(text = mode.name, modifier = Modifier.align(alignment = Alignment.CenterVertically))
+      Text(text = mode.uiName, modifier = Modifier.align(alignment = Alignment.CenterVertically))
    }
 }
 
@@ -273,6 +255,11 @@ private fun clicked(
    to: Workstation?
 ): PathCalculationResult {
    val bellmanFordAlgorithm = BellmanFordAlgorithm(workstations, lines)
-   if (to == null) return PathCalculationResult(paths = bellmanFordAlgorithm.calculate(from = from, byLength = byLength))
+   if (to == null) return PathCalculationResult(
+      paths = bellmanFordAlgorithm.calculate(
+         from = from,
+         byLength = byLength
+      )
+   )
    return PathCalculationResult(paths = bellmanFordAlgorithm.calculate(from = from, to = to, byLength = byLength))
 }

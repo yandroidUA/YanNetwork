@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.ui.components.EditText
+import com.github.yandroidua.ui.utils.VovaTheming
 
 // ------------------------------SettingsState--------------------------------------------------------------------------
 
@@ -28,10 +29,10 @@ fun SettingsScreen(
    settingsState: SettingsState,
    dumper: (String) -> Unit,
    loader: @Composable (String) -> Unit
-) = Column(modifier = modifier.padding(all = 8.dp).wrapContentSize()) {
+) = Column(modifier = modifier.padding(all = 8.dp).wrapContentSize(align = Alignment.Center)) {
    val loaderTrigger = remember { mutableStateOf(false) }
    Row {
-      Text(text = "Dump file:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+      Text(text = "Файл з налаштуванням мережі:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
       Spacer(modifier = Modifier.width(width = 5.dp))
       EditText(
          value = settingsState.dumpPathState.value,
@@ -40,14 +41,16 @@ fun SettingsScreen(
    }
    Spacer(modifier = Modifier.height(8.dp))
    Button(
-      modifier = Modifier.fillMaxWidth(),
+      colors = VovaTheming.buttonColors(),
+      modifier = Modifier.width(width = 400.dp),
       onClick = { dumper(settingsState.dumpPathState.value) }
-   ) { Text("Dump") }
+   ) { Text("Записати у файл") }
    Spacer(modifier = Modifier.height(8.dp))
    Button(
-      modifier = Modifier.fillMaxWidth(),
+      colors = VovaTheming.buttonColors(),
+      modifier = Modifier.width(width = 400.dp),
       onClick = { loaderTrigger.value = true }
-   ) { Text("Load") }
+   ) { Text("Завантажити з файлу") }
    if (loaderTrigger.value) {
       loader(settingsState.dumpPathState.value)
       loaderTrigger.value = false

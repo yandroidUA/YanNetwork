@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.github.yandroidua.simulation.models.LineType
 import com.github.yandroidua.ui.components.EditText
 import com.github.yandroidua.ui.elements.ElementLine
+import com.github.yandroidua.ui.utils.VovaTheming
 
 private data class LineDetailsErrorState(
    val weightErrorMessage: String? = null,
@@ -49,14 +50,14 @@ fun LineDetails(
    val errorState = remember { mutableStateOf(LineDetailsErrorState()) }
    Column(modifier = Modifier.weight(1f)) {
       Text(
-         text = "This is Line#${elementLine.id}",
+         text = "Канал №${elementLine.id}",
          modifier = Modifier
             .wrapContentWidth(align = Alignment.CenterHorizontally)
             .align(alignment = Alignment.CenterHorizontally)
       )
       Spacer(modifier = Modifier.fillMaxWidth().height(10.dp))
       Row(modifier = Modifier.fillMaxWidth().wrapContentHeight(align = Alignment.Top)) {
-         Text(text = "Weight", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+         Text(text = "Вага:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
          Spacer(modifier = Modifier.height(1.dp).width(5.dp))
          EditText(
             value = inputState.value.weight,
@@ -70,7 +71,7 @@ fun LineDetails(
       }
       Spacer(modifier = Modifier.fillMaxWidth().height(10.dp))
       Row {
-         Text(text = "Line type:")
+         Text(text = "Тип каналу:")
          Spacer(modifier = Modifier.height(1.dp).width(5.dp))
          DropdownMenu(
             toggleModifier = Modifier.wrapContentSize(),
@@ -95,7 +96,7 @@ fun LineDetails(
       }
       Spacer(modifier = Modifier.fillMaxWidth().height(10.dp))
       Row {
-         Text(text = "Error:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+         Text(text = "Ймовірність помилки:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
          Spacer(modifier = Modifier.height(1.dp).width(5.dp))
          EditText(
             value = inputState.value.errorChance,
@@ -105,11 +106,13 @@ fun LineDetails(
       }
    }
    Button(
+      colors = VovaTheming.buttonColors(),
       modifier = Modifier.fillMaxWidth(),
       onClick = { deleter(elementLine) }
-   ) { Text(text = "Delete") }
+   ) { Text(text = "Видалити") }
    Spacer(modifier = Modifier.height(height = 20.dp))
    Button(
+      colors = VovaTheming.buttonColors(),
       onClick = {
          checkInput(
             errorState,
@@ -128,7 +131,7 @@ fun LineDetails(
       },
       modifier = Modifier.fillMaxWidth()
    ) {
-      Text(text = "Save", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
+      Text(text = "Зберегти", modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally))
    }
 
 }

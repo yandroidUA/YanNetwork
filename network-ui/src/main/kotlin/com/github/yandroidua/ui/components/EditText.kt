@@ -28,62 +28,63 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun EditText(
-        value: String,
-        onValueChange: (String) -> Unit,
-        error: String? = null,
-        errorIcon: String = "error.png",
-        onErrorIconClicked: (String) -> Unit = { onErrIconClicked(it) },
-        modifier: Modifier = Modifier,
-        textStyle: TextStyle = TextStyle.Default.copy(fontSize = 15.sp),
-        maxLines: Int = Int.MAX_VALUE,
-        onImeActionPerformed: (ImeAction) -> Unit = {},
-        visualTransformation: VisualTransformation = VisualTransformation.None,
-        onTextLayout: (TextLayoutResult) -> Unit = {},
-        onTextInputStarted: (SoftwareKeyboardController) -> Unit = {},
-        cursorColor: Color = Color.Black
+   value: String,
+   onValueChange: (String) -> Unit,
+   error: String? = null,
+   errorIcon: String = "error.png",
+   onErrorIconClicked: (String) -> Unit = { onErrIconClicked(it) },
+   modifier: Modifier = Modifier,
+   textStyle: TextStyle = TextStyle.Default.copy(fontSize = 15.sp),
+   maxLines: Int = Int.MAX_VALUE,
+   onImeActionPerformed: (ImeAction) -> Unit = {},
+   visualTransformation: VisualTransformation = VisualTransformation.None,
+   onTextLayout: (TextLayoutResult) -> Unit = {},
+   onTextInputStarted: (SoftwareKeyboardController) -> Unit = {},
+   cursorColor: Color = Color.Black
 ) = Row(modifier) {
-    BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            textStyle = textStyle,
-            onImeActionPerformed = onImeActionPerformed,
-            visualTransformation = visualTransformation,
-            onTextLayout = onTextLayout,
-            onTextInputStarted = onTextInputStarted,
-            cursorColor = cursorColor,
-            maxLines = maxLines,
-            modifier = Modifier
-                    .border(
-                            shape = RoundedCornerShape(size = 4.dp),
-                            color = if (error.isNullOrBlank()) Color.Black else Color.Red,
-                            width = 2.dp
-                    )
-                    .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)
-    )
-    if (!error.isNullOrBlank()) {
-        Spacer(modifier = Modifier.height(1.dp).width(5.dp))
-        Image(imageFromResource(errorIcon),
-                modifier = Modifier
-                        .width(18.dp)
-                        .height(18.dp)
-                        .align(alignment = Alignment.CenterVertically)
-                        .clickable { onErrorIconClicked(error) }
-        )
-    }
+   BasicTextField(
+      value = value,
+      onValueChange = onValueChange,
+      textStyle = textStyle,
+      onImeActionPerformed = onImeActionPerformed,
+      visualTransformation = visualTransformation,
+      onTextLayout = onTextLayout,
+      onTextInputStarted = onTextInputStarted,
+      cursorColor = cursorColor,
+      maxLines = maxLines,
+      modifier = Modifier
+         .border(
+            shape = RoundedCornerShape(size = 4.dp),
+            color = if (error.isNullOrBlank()) Color.Black else Color.Red,
+            width = 2.dp
+         )
+         .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)
+   )
+   if (!error.isNullOrBlank()) {
+      Spacer(modifier = Modifier.height(1.dp).width(5.dp))
+      Image(imageFromResource(errorIcon),
+         modifier = Modifier
+            .width(18.dp)
+            .height(18.dp)
+            .align(alignment = Alignment.CenterVertically)
+            .clickable { onErrorIconClicked(error) }
+      )
+   }
 }
 
 @OptIn(ExperimentalKeyInput::class)
 private fun onErrIconClicked(message: String) {
-    AppWindow(size = IntSize(100, 100)).also {
-        it.keyboard.setShortcut(Key.Escape) {
-            it.close()
-        }
-    }.show {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Text(message, modifier = Modifier
-                    .align(alignment = Alignment.Center)
-            )
-        }
+   AppWindow(size = IntSize(100, 100)).also {
+      it.keyboard.setShortcut(Key.Escape) {
+         it.close()
+      }
+   }.show {
+      Box(modifier = Modifier.fillMaxSize()) {
+         Text(
+            message, modifier = Modifier
+               .align(alignment = Alignment.Center)
+         )
+      }
 
-    }
+   }
 }

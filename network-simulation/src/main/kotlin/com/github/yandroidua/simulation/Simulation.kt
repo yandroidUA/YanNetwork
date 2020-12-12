@@ -262,7 +262,7 @@ class Simulation(
                from,
                to,
                routingTables,
-               InformationPacket(id = packetId, size = configuration.infoPacketSize),
+               InformationPacket(id = packetId, size = minOf(configuration.infoPacketSize, configuration.size - it * configuration.infoPacketSize)),
                handler
             )
          )
@@ -302,7 +302,7 @@ class Simulation(
          if (sendPackageToEndSuspended(
                InformationPacket(
                   id = packetId,
-                  size = configuration.infoPacketSize
+                  size = minOf(configuration.infoPacketSize, configuration.size - it * configuration.infoPacketSize)
                ), path, true, handler
             )
          ) {
