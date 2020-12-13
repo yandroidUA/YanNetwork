@@ -60,10 +60,9 @@ class BellmanFordAlgorithm(
         var tries = 0
 
         while (currentWorkstation != from.number) {
+            if (tries == workstations.size) return
+            tries++
             for (workstation in workstations) {
-                if (tries == workstations.size) return
-                tries++
-
                 if (currentWorkstation == from.number) {
                     path.add(-1 to currentWorkstation)
                     break
