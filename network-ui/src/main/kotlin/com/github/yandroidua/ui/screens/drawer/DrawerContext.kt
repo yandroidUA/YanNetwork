@@ -94,7 +94,11 @@ class DrawerContext(
       get() = elementsState.value.filterIsInstance<ElementCommunicationNode>()
 
    fun startSimulation() {
-      deleteAllMessages()
+      drawerContext.cancel()
+      if (moveMutex.isLocked) {
+         moveMutex.unlock()
+      }
+      deleteAllMessages(force = true)
       if (simulationContext.simulationPathState.value == null) return
       simulationContext.simulationStartedState.value = true
       simulationContext.simulationStoppedState.value = false
@@ -303,8 +307,8 @@ class DrawerContext(
       SwingUtilities.invokeLater {
          SimulationResultWindow(
             messageSize = simulationContext.size,
-            udpHeader = simulationContext.udpHeaderSize,
-            tcpHeader = simulationContext.tcpHeaderSize,
+            systemPacketsCount = event.systemPackets,
+            infoPacketsCount= event.infoPackets,
             packageInformationSize = simulationContext.infoPacketSize,
             systemTraffic = event.systemBytes,
             informationTraffic = event.infoBytes,

@@ -1,14 +1,12 @@
 package com.github.yandroidua.ui.screens.drawer
 
 
-import androidx.compose.desktop.AppManager
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -17,19 +15,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.imageFromResource
 import androidx.compose.ui.input.pointer.pointerMoveFilter
-import androidx.compose.ui.layout.WithConstraints
 import androidx.compose.ui.unit.dp
-import com.github.yandroidua.ui.MAIN_WINDOW_TITLE
-import com.github.yandroidua.ui.WIDTH
-import com.github.yandroidua.ui.elements.ElementWorkstation
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
+import com.github.yandroidua.ui.mappers.mapToUiResult
 import com.github.yandroidua.ui.models.TabType
-import com.github.yandroidua.ui.screens.calculation.CalculationWindow
 import com.github.yandroidua.ui.screens.SimulationScreen
+import com.github.yandroidua.ui.screens.calculation.CalculationWindow
 import com.github.yandroidua.ui.screens.details.DetailsScreen
 import com.github.yandroidua.ui.utils.VovaTheming
-import javax.swing.SwingUtilities
 
 // ------------------------------------Constants------------------------------------------------------------------------
 
@@ -55,7 +49,18 @@ private fun calculate(context: DrawerContext, navigator: (TabType, Any?) -> Unit
       workstations = context.connectableElements,
       lines = context.lines,
       simulationContext = context.simulationContext
-   ) { result -> navigator(TabType.RESULTS, result) }
+   ) { result ->
+      val first = result.paths.map { it.mapToUiResult(context.elementsState.value) }.firstOrNull()
+         ?: return@CalculationWindow
+      context.simulationContext.simulationPathState.value = first
+//      navigator(
+//         TabType.RESULTS,
+//         c
+//          drawerContext?.apply {
+//            simulationContext.simulationPathState.value = first
+//         }?.also { applicationState.drawerContext = it }
+//      )
+   }
 }
 
 @Composable

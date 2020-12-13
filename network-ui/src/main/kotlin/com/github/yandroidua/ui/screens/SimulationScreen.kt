@@ -20,6 +20,7 @@ import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.ui.models.PathResultElements
 import com.github.yandroidua.ui.models.SimulationResultModel
+import com.github.yandroidua.ui.utils.VovaTheming
 
 @Composable
 fun SimulationScreen(
@@ -42,24 +43,25 @@ fun SimulationScreen(
          .padding(10.dp)
    ) {
       Button(
+         colors = VovaTheming.buttonColors(),
          onClick = onClose,
          modifier = Modifier
             .padding(all = 4.dp)
             .wrapContentSize(align = Alignment.TopEnd)
             .align(Alignment.End)
-      ) { Text(text = "Close") }
+      ) { Text(text = "X", color = Color.Red) }
       Spacer(modifier = Modifier.height(height = 8.dp))
-      Text(text = "${simulationState.value}", modifier = Modifier.align(alignment = Alignment.CenterHorizontally))
+      Text(text = "${simulationState.value ?: "Симуляція ще не почалась"}", modifier = Modifier.align(alignment = Alignment.CenterHorizontally))
       Spacer(modifier = Modifier.height(height = 10.dp))
-      Path(path = path, steps = path.path.size, isSendEnabled = false)
+//      Path(path = path, steps = path.path.size, isSendEnabled = false)
       Spacer(modifier = Modifier.height(height = 10.dp))
-      StatusButton(enabled = stopState.value, onClick = { onNext() }) { Text(text = "Next") }
+      StatusButton(enabled = stopState.value, onClick = { onNext() }) { Text(text = "Наступний крок") }
       Spacer(modifier = Modifier.height(height = 10.dp))
-      StatusButton(enabled = stopState.value.not(), onClick = { onStop() }) { Text(text = "Stop") }
+      StatusButton(enabled = stopState.value.not(), onClick = { onStop() }) { Text(text = "Зупинити") }
       Spacer(modifier = Modifier.height(height = 10.dp))
-      StatusButton(enabled = stopState.value, onClick = { onResume() }) { Text(text = "Resume") }
+      StatusButton(enabled = stopState.value, onClick = { onResume() }) { Text(text = "Продовжити") }
       Spacer(modifier = Modifier.height(height = 10.dp))
-      StatusButton(onClick = { onRestart() }) { Text(text = if (startState.value) "Restart" else "Start") }
+      StatusButton(onClick = { onRestart() }) { Text(text = if (startState.value) "Перезапустити" else "Запустити") }
       Spacer(modifier = Modifier.height(height = 10.dp))
    }
 }
@@ -70,12 +72,11 @@ fun StatusButton(
    onClick: () -> Unit,
    text: @Composable RowScope.() -> Unit
 ) {
-   Surface(
-      modifier = Modifier
-         .fillMaxWidth()
-         .alpha(alpha = if (enabled) 1f else 0.5f)
-   ) {
-      Button(onClick = onClick, content = text)
-   }
-
+      Button(
+         modifier = Modifier.fillMaxWidth(),
+         enabled = enabled,
+         colors = VovaTheming.buttonColors(),
+         onClick = onClick,
+         content = text
+      )
 }

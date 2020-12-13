@@ -21,6 +21,8 @@ class Simulation(
 
    private var systemPackagesBytes: Int = 0
    private var infoPackagesBytes: Int = 0
+   private var systemPackagesSend: Int = 0
+   private var infoPackagesSend: Int = 0
    private val counterMutex = Mutex(locked = false)
    private val connectionInformation = ConnectionInformation(models.filterIsInstance<SimulationConnection>())
 
@@ -37,7 +39,7 @@ class Simulation(
    }
 
    private fun calculateDelay(connection: SimulationConnection): Long {
-      return 50L * if (connection.type == LineType.HALF_DUPLEX) 2 else 1
+      return 1L * if (connection.type == LineType.HALF_DUPLEX) 2 else 1
    }
 
    private suspend fun onCannotSendByRoutingTable(
@@ -78,7 +80,7 @@ class Simulation(
       var nextWorkstationId: Int
 
       if (!isFromError) {
-         addPackageSize(packet)
+         addPackageSize(packet, true)
       }
 
       while (fromWorkstationId != toWorkstation.id) {
@@ -192,12 +194,15 @@ class Simulation(
             println("Adding ${packet.size} to INFO TRAFFIC")
             infoPackagesBytes += packet.size
             systemPackagesBytes += if (isUDP) {
+               systemPackagesSend += 1
                configuration.udpHeaderSize
             } else {
                configuration.tcpHeaderSize
             }
+            infoPackagesSend += 1
          }
          PacketType.SYSTEM -> {
+            systemPackagesSend += 1
             println("Adding ${packet.size} to SYS TRAFFIC")
             systemPackagesBytes += packet.size
          }
@@ -270,7 +275,7 @@ class Simulation(
          delay(1L)
       }
       packageJobs.joinAll()
-      handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes), false)
+      handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes, systemPackagesSend, infoPackagesSend), false)
    }
 
    private suspend fun simulateTCP(
@@ -342,7 +347,7 @@ class Simulation(
             size = configuration.tcpHeaderSize
          ), path, false, handler
       )
-      handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes), false)
+      handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes, systemPackagesSend, infoPackagesSend), false)
    }
 
 }

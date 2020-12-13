@@ -12,36 +12,36 @@ import java.util.*
 
 fun SimulationResultWindow(
    messageSize: Int,
-   udpHeader: Int,
+   infoPacketsCount: Int,
    packageInformationSize: Int,
-   tcpHeader: Int,
+   systemPacketsCount: Int,
    informationTraffic: Int,
    systemTraffic: Int,
    mode: Mode,
    startTime: Long,
    endTime: Long
-) = AppWindow(size = IntSize(800, 600), title = "Results").show {
+) = AppWindow(size = IntSize(800, 600), title = "Результати").show {
    val simpleDateFormat = SimpleDateFormat("dd.MM.YYYY HH:mm:ss.SSS")
    Column(modifier = Modifier.fillMaxWidth()) {
-      Text(text = "Message size: $messageSize")
+      Text(text = "Розмір повідомлення: $messageSize")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "UDP header size: $udpHeader")
+      Text(text = "К-ть інформаційних пакетів: $infoPacketsCount")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "TCP package size: $tcpHeader")
+      Text(text = "К-ть системних пакетів: $systemPacketsCount")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "Info. package size: $packageInformationSize")
+      Text(text = "Розмір інформаційної частини в пакеті: $packageInformationSize")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "Info. traffic: $informationTraffic")
+      Text(text = "Інформаційний трафік: $informationTraffic")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "Sys. traffic: $systemTraffic")
+      Text(text = "Системний трафік: $systemTraffic")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "Start time: $startTime (${simpleDateFormat.format(Date(startTime))})")
+      Text(text = "Час початку симуляції: $startTime (${simpleDateFormat.format(Date(startTime))})")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "End time: $endTime (${simpleDateFormat.format(Date(endTime))})")
+      Text(text = "Час закінчення симуляції: $endTime (${simpleDateFormat.format(Date(endTime))})")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "Duration: ${endTime - startTime} millis")
+      Text(text = "Тривалість: ${50.0 * (endTime - startTime) / 10.0} у.о.")
       Spacer(modifier = Modifier.height(height = 4.dp))
-      Text(text = "Mode: ${mode.name}")
+      Text(text = "Режим: ${mode.uiName}")
       Spacer(modifier = Modifier.height(height = 4.dp))
    }
 }

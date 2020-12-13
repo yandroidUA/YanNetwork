@@ -43,7 +43,7 @@ fun DetailsScreen(
       colors = VovaTheming.buttonColors(),
       onClick = closer,
       modifier = Modifier.align(Alignment.End)
-   ) { Icon(imageFromResource("workstation.png")) }
+   ) { Text(text = "X", color = Color.Red) }
    when (element.type) {
       ElementType.WORKSTATION -> WorkstationDetails(
          elementWorkstation = element as ElementWorkstation,
