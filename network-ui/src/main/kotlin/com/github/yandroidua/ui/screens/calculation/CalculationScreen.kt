@@ -28,7 +28,7 @@ import com.github.yandroidua.ui.elements.base.ConnectableElement
 import com.github.yandroidua.ui.mappers.mapToAlgorithmEntity
 import com.github.yandroidua.ui.models.PathCalculationResult
 import com.github.yandroidua.ui.screens.drawer.SimulationContext
-import com.github.yandroidua.ui.utils.VovaTheming
+import com.github.yandroidua.ui.utils.DaeerTheming
 
 @OptIn(ExperimentalKeyInput::class)
 fun CalculationWindow(
@@ -183,7 +183,7 @@ fun CalculationWindow(
             }
          }
          Button(
-            colors = VovaTheming.buttonColors(),
+            colors = DaeerTheming.buttonColors(),
             onClick = {
                if (state.fromWorkstationState.value == null) {
                   state.calculationFromErrorContext.workstationFromErrorState.value = true

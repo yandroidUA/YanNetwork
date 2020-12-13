@@ -4,23 +4,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.imageFromResource
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.ui.models.PathResultElements
 import com.github.yandroidua.ui.models.SimulationResultModel
-import com.github.yandroidua.ui.utils.VovaTheming
+import com.github.yandroidua.ui.utils.DaeerTheming
 
 @Composable
 fun SimulationScreen(
@@ -43,7 +38,7 @@ fun SimulationScreen(
          .padding(10.dp)
    ) {
       Button(
-         colors = VovaTheming.buttonColors(),
+         colors = DaeerTheming.buttonColors(),
          onClick = onClose,
          modifier = Modifier
             .padding(all = 4.dp)
@@ -75,7 +70,7 @@ fun StatusButton(
       Button(
          modifier = Modifier.fillMaxWidth(),
          enabled = enabled,
-         colors = VovaTheming.buttonColors(),
+         colors = DaeerTheming.buttonColors(),
          onClick = onClick,
          content = text
       )

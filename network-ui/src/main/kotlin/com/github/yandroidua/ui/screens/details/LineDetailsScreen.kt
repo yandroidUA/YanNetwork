@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.github.yandroidua.simulation.models.LineType
 import com.github.yandroidua.ui.components.EditText
 import com.github.yandroidua.ui.elements.ElementLine
-import com.github.yandroidua.ui.utils.VovaTheming
+import com.github.yandroidua.ui.utils.DaeerTheming
 
 private data class LineDetailsErrorState(
    val weightErrorMessage: String? = null,
@@ -106,13 +106,13 @@ fun LineDetails(
       }
    }
    Button(
-      colors = VovaTheming.buttonColors(),
+      colors = DaeerTheming.buttonColors(),
       modifier = Modifier.fillMaxWidth(),
       onClick = { deleter(elementLine) }
    ) { Text(text = "Видалити") }
    Spacer(modifier = Modifier.height(height = 20.dp))
    Button(
-      colors = VovaTheming.buttonColors(),
+      colors = DaeerTheming.buttonColors(),
       onClick = {
          checkInput(
             errorState,

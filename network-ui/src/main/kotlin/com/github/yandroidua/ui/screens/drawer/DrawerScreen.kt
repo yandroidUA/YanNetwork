@@ -23,7 +23,7 @@ import com.github.yandroidua.ui.models.TabType
 import com.github.yandroidua.ui.screens.SimulationScreen
 import com.github.yandroidua.ui.screens.calculation.CalculationWindow
 import com.github.yandroidua.ui.screens.details.DetailsScreen
-import com.github.yandroidua.ui.utils.VovaTheming
+import com.github.yandroidua.ui.utils.DaeerTheming
 
 // ------------------------------------Constants------------------------------------------------------------------------
 
@@ -71,15 +71,15 @@ fun PanelScreen(
    navigator: (TabType, Any?) -> Unit
 ) = Row(modifier) {
    Column(modifier = Modifier.weight(1f)) {
-      DrawArea(
-         modifier = Modifier.fillMaxSize().background(Color.White).weight(1f),
-         elementsState = context.elementsState,
-         onPointerMove = context::onMouseMoved,
-         onTap = { offset ->
-            context.selectedElementState.value = context.onCanvasTyped(offset)
-         }
-      )
       ControlPanel(context, navigator)
+      DrawArea(
+              modifier = Modifier.fillMaxSize().background(Color.White).weight(1f),
+              elementsState = context.elementsState,
+              onPointerMove = context::onMouseMoved,
+              onTap = { offset ->
+                 context.selectedElementState.value = context.onCanvasTyped(offset)
+              }
+      )
    }
 
 
@@ -126,18 +126,18 @@ private fun ControlPanel(context: DrawerContext, navigator: (TabType, Any?) -> U
    Row(modifier = Modifier.weight(weight = 1f)) {
       Spacer(modifier = Modifier.width(20.dp))
       Button(
-         colors = VovaTheming.buttonColors(),
+         colors = DaeerTheming.buttonColors(),
          modifier = Modifier.align(alignment = Alignment.CenterVertically),
          onClick = context::undo
       ) { Text(text = "Назад") }
       Spacer(modifier = Modifier.width(20.dp))
       Button(
-         colors = VovaTheming.buttonColors(),
+         colors = DaeerTheming.buttonColors(),
          modifier = Modifier.align(alignment = Alignment.CenterVertically),
          onClick = { context.cancel(); onDetailsShow(false) }) { Text(text = "Відмінити") }
       Spacer(modifier = Modifier.width(20.dp))
       Button(
-         colors = VovaTheming.buttonColors(),
+         colors = DaeerTheming.buttonColors(),
          modifier = Modifier.align(alignment = Alignment.CenterVertically),
          onClick = { calculate(context, navigator) }
       ) { Text(text = "Запустити симуляцію") }
@@ -175,7 +175,7 @@ private fun ControlPanel(context: DrawerContext, navigator: (TabType, Any?) -> U
       Spacer(modifier = Modifier.height(height = 60.dp).width(width = 4.dp).background(color = Color.Black))
    }
    Button(
-      colors = VovaTheming.buttonColors(),
+      colors = DaeerTheming.buttonColors(),
       modifier = Modifier.align(alignment = Alignment.CenterVertically),
       onClick = context::clear
    ) { Text(text = "Очистити") }

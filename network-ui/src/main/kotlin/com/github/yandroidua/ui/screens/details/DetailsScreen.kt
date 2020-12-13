@@ -5,15 +5,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.imageFromResource
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.simulation.models.SimulationRoutingTableEntry
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
@@ -21,7 +18,7 @@ import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.elements.base.ElementType
 import com.github.yandroidua.ui.elements.ElementLine
 import com.github.yandroidua.ui.elements.ElementWorkstation
-import com.github.yandroidua.ui.utils.VovaTheming
+import com.github.yandroidua.ui.utils.DaeerTheming
 
 @Composable
 fun DetailsScreen(
@@ -40,7 +37,7 @@ fun DetailsScreen(
    )
 ) {
    Button(
-      colors = VovaTheming.buttonColors(),
+      colors = DaeerTheming.buttonColors(),
       onClick = closer,
       modifier = Modifier.align(Alignment.End)
    ) { Text(text = "X", color = Color.Red) }

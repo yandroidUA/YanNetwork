@@ -13,7 +13,7 @@ import com.github.yandroidua.simulation.models.SimulationRoutingTableEntry
 import com.github.yandroidua.ui.components.EditText
 import com.github.yandroidua.ui.components.RouteTable
 import com.github.yandroidua.ui.elements.ElementCommunicationNode
-import com.github.yandroidua.ui.utils.VovaTheming
+import com.github.yandroidua.ui.utils.DaeerTheming
 
 
 @Composable
@@ -45,7 +45,7 @@ fun CommunicationNodeDetailsScreen(
       RouteTable(connections)
    }
    Button(
-      colors = VovaTheming.buttonColors(),
+      colors = DaeerTheming.buttonColors(),
       onClick = { deleter(elementCommunicationNode) },
       modifier = Modifier.fillMaxWidth()
    ) {
@@ -53,7 +53,7 @@ fun CommunicationNodeDetailsScreen(
    }
    Spacer(modifier = Modifier.height(height = 4.dp))
    Button(
-      colors = VovaTheming.buttonColors(),
+      colors = DaeerTheming.buttonColors(),
       onClick = {
          elementCommunicationNode.network = networkState.value
          saver(elementCommunicationNode)

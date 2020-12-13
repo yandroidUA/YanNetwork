@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.github.yandroidua.dump.Dumper
-import com.github.yandroidua.ui.components.PageTab
 import com.github.yandroidua.ui.elements.base.Element
 import com.github.yandroidua.ui.models.PathCalculationResult
 import com.github.yandroidua.ui.models.TabType
@@ -24,14 +23,13 @@ import com.github.yandroidua.ui.screens.SettingsState
 import com.github.yandroidua.ui.screens.drawer.DrawerContext
 import com.github.yandroidua.ui.screens.drawer.PanelScreen
 import com.github.yandroidua.ui.screens.drawer.SimulationContext
-import com.github.yandroidua.ui.utils.VovaTheming
+import com.github.yandroidua.ui.utils.DaeerTheming
 import com.github.yandroidua.ui.utils.addToDumpElements
 import com.github.yandroidua.ui.utils.toApplicationState
-import kotlinx.coroutines.Dispatchers
 
 //-----------------------------------Constants--------------------------------------------------------------------------
 
-const val MAIN_WINDOW_TITLE = "Солодко Володимир, КВ-71"
+const val MAIN_WINDOW_TITLE = "Julya Tkachenko KV 72"
 const val WIDTH = 1200
 const val HEIGHT = 900
 private const val TITLE_SETTINGS = "Налаштування"
@@ -110,6 +108,7 @@ fun main() = Window(
             .fillMaxSize()
             .background(color = Color.White)
       ) {
+
          Surface(modifier = Modifier.fillMaxHeight()) {
             Column(
                modifier = Modifier
@@ -149,7 +148,7 @@ fun main() = Window(
 private fun NavigationButton(modifier: Modifier = Modifier, onClick: () -> Unit, selected: Boolean, text: String) {
    Button(
       enabled = !selected,
-      colors = VovaTheming.buttonColors(),
+      colors = DaeerTheming.buttonColors(),
       modifier = modifier.then(
          Modifier
             .padding(all = 10.dp)

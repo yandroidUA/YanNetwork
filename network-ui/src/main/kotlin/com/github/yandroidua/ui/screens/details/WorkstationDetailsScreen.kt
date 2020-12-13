@@ -13,7 +13,7 @@ import com.github.yandroidua.simulation.models.SimulationRoutingTableEntry
 import com.github.yandroidua.ui.components.EditText
 import com.github.yandroidua.ui.components.RouteTable
 import com.github.yandroidua.ui.elements.ElementWorkstation
-import com.github.yandroidua.ui.utils.VovaTheming
+import com.github.yandroidua.ui.utils.DaeerTheming
 
 @Composable
 fun WorkstationDetails(
@@ -44,7 +44,7 @@ fun WorkstationDetails(
       RouteTable(connections)
    }
    Button(
-      colors = VovaTheming.buttonColors(),
+      colors = DaeerTheming.buttonColors(),
       onClick = { deleter(elementWorkstation) },
       modifier = Modifier.fillMaxWidth()
    ) {
@@ -52,7 +52,7 @@ fun WorkstationDetails(
    }
    Spacer(modifier = Modifier.height(height = 4.dp))
    Button(
-      colors = VovaTheming.buttonColors(),
+      colors = DaeerTheming.buttonColors(),
       onClick = {
          elementWorkstation.network = workstationNetworkState.value
          saver(elementWorkstation)
