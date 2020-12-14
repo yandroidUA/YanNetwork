@@ -23,9 +23,11 @@ class Simulation(
    private var infoPackagesBytes: Int = 0
    private var systemPackagesSend: Int = 0
    private var infoPackagesSend: Int = 0
+   private var errorCount: Int = 0
    private val counterMutex = Mutex(locked = false)
    private val connectionInformation = ConnectionInformation(models.filterIsInstance<SimulationConnection>())
-
+   val infoPackageSize: Int
+      get() = configuration.infoPacketSize - if (configuration.mode == Mode.DATAGRAM) configuration.udpHeaderSize else configuration.tcpHeaderSize
    private fun findConnection(connectionId: ConnectionId): SimulationConnection? {
       return models.find { it.id == connectionId } as? SimulationConnection
    }
@@ -35,11 +37,11 @@ class Simulation(
    }
 
    private fun calculateInformationPackages(): Int {
-      return ceil(configuration.size.toFloat() / configuration.infoPacketSize).toInt()
+      return ceil(configuration.size.toFloat() / infoPackageSize).toInt()
    }
 
    private fun calculateDelay(connection: SimulationConnection): Long {
-      return 1L * if (connection.type == LineType.HALF_DUPLEX) 2 else 1
+      return 10L * if (connection.type == LineType.HALF_DUPLEX) 2 else 1
    }
 
    private suspend fun onCannotSendByRoutingTable(
@@ -81,6 +83,7 @@ class Simulation(
 
       if (!isFromError) {
          addPackageSize(packet, true)
+//         addPackageSize(SystemInformationPacket(size = 50 + configuration.udpHeaderSize), true)
       }
 
       while (fromWorkstationId != toWorkstation.id) {
@@ -104,8 +107,12 @@ class Simulation(
                true,
                handler
             )
-         )
+         ) {
+            counterMutex.lock()
+            errorCount += 1
+            counterMutex.unlock()
             return@launch
+         }
 
          connectionInformation.release(line.id)
          fromWorkstationId = nextWorkstationId
@@ -180,6 +187,10 @@ class Simulation(
                handler
             )
          ) {
+            counterMutex.lock()
+            errorCount += 1
+            counterMutex.unlock()
+            addPackageSize(SystemInformationPacket(id = 100500, size = configuration.tcpHeaderSize + 50))
             return sendPackageToEndSuspended(packet, path, useError, handler)
          }
          fromWorkstation = workstation
@@ -193,12 +204,14 @@ class Simulation(
          PacketType.INFORMATION -> {
             println("Adding ${packet.size} to INFO TRAFFIC")
             infoPackagesBytes += packet.size
-            systemPackagesBytes += if (isUDP) {
+            val sysPart = if (isUDP) {
                systemPackagesSend += 1
                configuration.udpHeaderSize
             } else {
                configuration.tcpHeaderSize
             }
+            systemPackagesBytes += sysPart
+//            infoPackagesBytes -= sysPart
             infoPackagesSend += 1
          }
          PacketType.SYSTEM -> {
@@ -267,7 +280,7 @@ class Simulation(
                from,
                to,
                routingTables,
-               InformationPacket(id = packetId, size = minOf(configuration.infoPacketSize, configuration.size - it * configuration.infoPacketSize)),
+               InformationPacket(id = packetId, size = minOf(infoPackageSize, configuration.size - it * infoPackageSize)),
                handler
             )
          )
@@ -275,7 +288,7 @@ class Simulation(
          delay(1L)
       }
       packageJobs.joinAll()
-      handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes, systemPackagesSend, infoPackagesSend), false)
+      handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes, systemPackagesSend, infoPackagesSend, errorCount), false)
    }
 
    private suspend fun simulateTCP(
@@ -287,19 +300,19 @@ class Simulation(
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.tcpHeaderSize
+            size = configuration.tcpHeaderSize + 50
          ), path, false, handler
       )
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.tcpHeaderSize
+            size = configuration.tcpHeaderSize + 50
          ), path.reverse(), false, handler
       )
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.tcpHeaderSize
+            size = configuration.tcpHeaderSize + 50
          ), path, false, handler
       )
       repeat(packetCount) {
@@ -307,14 +320,14 @@ class Simulation(
          if (sendPackageToEndSuspended(
                InformationPacket(
                   id = packetId,
-                  size = minOf(configuration.infoPacketSize, configuration.size - it * configuration.infoPacketSize)
+                  size = minOf(infoPackageSize, configuration.size - it * infoPackageSize)
                ), path, true, handler
             )
          ) {
             sendPackageToEndSuspended(
                SystemInformationPacket(
                   id = packetId,
-                  size = configuration.tcpHeaderSize
+                  size = configuration.tcpHeaderSize + 50
                ), path.reverse(), false, handler
             )
          }
@@ -323,31 +336,31 @@ class Simulation(
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.tcpHeaderSize
+            size = configuration.tcpHeaderSize + 50
          ), path, false, handler
       )
       // ACK
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.tcpHeaderSize
+            size = configuration.tcpHeaderSize + 50
          ), path.reverse(), false, handler
       )
       // FIN
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.tcpHeaderSize
+            size = configuration.tcpHeaderSize + 50
          ), path.reverse(), false, handler
       )
       // ACK
       sendPackageToEndSuspended(
          SystemInformationPacket(
             id = idGenerator(),
-            size = configuration.tcpHeaderSize
+            size = configuration.tcpHeaderSize + 50
          ), path, false, handler
       )
-      handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes, systemPackagesSend, infoPackagesSend), false)
+      handler(Event.EndSimulationEvent(systemPackagesBytes, infoPackagesBytes, systemPackagesSend, infoPackagesSend, errorCount), false)
    }
 
 }

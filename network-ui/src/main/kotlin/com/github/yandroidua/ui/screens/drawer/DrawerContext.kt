@@ -31,47 +31,47 @@ import kotlin.coroutines.resume
 import kotlin.random.Random
 
 class DrawerContext(
-   /**
-    * Contains of elements that draws on Canvas
-    */
-   val elementsState: MutableState<List<Element>>,
-   /**
-    * Contains selected element
-    *
-    * used to select in Panel and when tap draw in to canvas also in details screens
-    */
-   val selectedElementState: MutableState<Element?>,
-   /**
-    * Contains simulation messages
-    */
-   val messageState: MutableState<SimulationResultModel?>,
-   /**
-    * Contains element's count, used for ID for new element
-    */
-   var elementCounter: Int = 0,
-   /**
-    * Contains information about message
-    * fill during simulation
-    */
-   var messageContext: MessageContext? = null,
-   /**
-    * Contains last touch Offset value
-    * used to display movement of new line
-    */
-   var lineCreationLastTouchOffset: Offset? = null,
-   /**
-    * Hold selected type
-    * used to create new elements and to open details
-    */
-   var selectedElementType: ElementType? = null,
-   /**
-    * Contains info for simulation
-    */
-   val simulationContext: SimulationContext
+        /**
+         * Contains of elements that draws on Canvas
+         */
+        val elementsState: MutableState<List<Element>>,
+        /**
+         * Contains selected element
+         *
+         * used to select in Panel and when tap draw in to canvas also in details screens
+         */
+        val selectedElementState: MutableState<Element?>,
+        /**
+         * Contains simulation messages
+         */
+        val messageState: MutableState<SimulationResultModel?>,
+        /**
+         * Contains element's count, used for ID for new element
+         */
+        var elementCounter: Int = 0,
+        /**
+         * Contains information about message
+         * fill during simulation
+         */
+        var messageContext: MessageContext? = null,
+        /**
+         * Contains last touch Offset value
+         * used to display movement of new line
+         */
+        var lineCreationLastTouchOffset: Offset? = null,
+        /**
+         * Hold selected type
+         * used to create new elements and to open details
+         */
+        var selectedElementType: ElementType? = null,
+        /**
+         * Contains info for simulation
+         */
+        val simulationContext: SimulationContext
 ) {
 
    companion object {
-      private val LINE_WEIGHTS = arrayOf(4, 5, 7, 8, 11, 14, 15, 18, 21, 22, 27, 28)
+      private val LINE_WEIGHTS = arrayOf(2, 3, 6, 9, 12, 14, 16, 18, 20, 21, 24)
    }
 
    private val random = Random(System.currentTimeMillis())
@@ -142,7 +142,7 @@ class DrawerContext(
       lineCreationLastTouchOffset = null
       selectedElementState.value = null
       val indexOfActiveLine =
-         elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
+              elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
       if (indexOfActiveLine != -1) {
          elementsState.value = elementsState.value.toMutableList().apply { removeAt(indexOfActiveLine) }
       }
@@ -179,11 +179,11 @@ class DrawerContext(
       // event need to be handled only for LINE
       if (selectedElementType != ElementType.LINE) return false
       val creatingLineIndex =
-         elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
+              elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
       if (creatingLineIndex == -1) return false
       val line = (elementsState.value.getOrNull(creatingLineIndex) as? ElementLine) ?: return false
       changeElement(
-         element = line.copy(startEndOffset = line.startEndOffset.copy(endPoint = offset), isInMovement = true)
+              element = line.copy(startEndOffset = line.startEndOffset.copy(endPoint = offset), isInMovement = true)
       )
       return true
    }
@@ -202,7 +202,8 @@ class DrawerContext(
          ElementType.WORKSTATION -> onWorkstationCreate(position)
          ElementType.COMMUNICATION_NODE -> onCommunicationNodeCreate(position)
          ElementType.LINE -> onLineCreate(position)
-         ElementType.MESSAGE -> {}
+         ElementType.MESSAGE -> {
+         }
       }
 //      selectedElementType = null
 //      selectedElementState.value = null
@@ -227,20 +228,20 @@ class DrawerContext(
 
    private fun createLogicalParams(): SimulationParams.TcpSimulationParams {
       return SimulationParams.TcpSimulationParams(
-         path = simulationContext.simulationPathState.value?.mapToSimulation(),
-         idGenerator = this::idGenerator,
-         handler = this::simulationPackageHandler
+              path = simulationContext.simulationPathState.value?.mapToSimulation(),
+              idGenerator = this::idGenerator,
+              handler = this::simulationPackageHandler
       )
    }
 
    private fun createDatagramParams(): SimulationParams.UdpSimulationParams {
       val routingTables = connectableElements.map { SimulationRoutingTable(it.id, findConnectableElementConnections(it)) }
       return SimulationParams.UdpSimulationParams(
-         from = simulationContext.fromId,
-         to = simulationContext.toId,
-         routingTables = routingTables,
-         idGenerator = this::idGenerator,
-         handler = this::simulationPackageHandler
+              from = simulationContext.fromId,
+              to = simulationContext.toId,
+              routingTables = routingTables,
+              idGenerator = this::idGenerator,
+              handler = this::simulationPackageHandler
       )
    }
 
@@ -271,19 +272,19 @@ class DrawerContext(
 
    private fun findConnectableElementConnections(connectableElement: ConnectableElement): List<SimulationRoutingTableEntry> {
       val alg = BellmanFordAlgorithm(
-         workstations = connectableElements.map { it.mapToAlgorithmEntity() },
-         lines = lines.map { it.mapToAlgorithmEntity() }
+              workstations = connectableElements.map { it.mapToAlgorithmEntity() },
+              lines = lines.map { it.mapToAlgorithmEntity() }
       )
       val routingTable = RoutingTable(
-         allElements = elementsState.value.map { it.mapToSimulation() }.filterNotNull(),
-         workstation = connectableElement.mapToSimulation()
+              allElements = elementsState.value.map { it.mapToSimulation() }.filterNotNull(),
+              workstation = connectableElement.mapToSimulation()
       )
       return routingTable.routingTable { from, to ->
          val fromWorkstation = connectableElements.find { it.id == from } ?: return@routingTable null
          val toWorkstation = connectableElements.find { it.id == to } ?: return@routingTable null
          alg.calculate(from = fromWorkstation.mapToAlgorithmEntity(), to = toWorkstation.mapToAlgorithmEntity(), byLength = true)
-            .minByOrNull { it.summary }
-            ?.mapToSimulation()
+                 .minByOrNull { it.summary }
+                 ?.mapToSimulation()
       }
    }
 
@@ -306,35 +307,38 @@ class DrawerContext(
       deleteAllMessages()
       SwingUtilities.invokeLater {
          SimulationResultWindow(
-            messageSize = simulationContext.size,
-            systemPacketsCount = event.systemPackets,
-            infoPacketsCount= event.infoPackets,
-            packageInformationSize = simulationContext.infoPacketSize,
-            systemTraffic = event.systemBytes,
-            informationTraffic = event.infoBytes,
-            mode = simulationContext.mode,
-            startTime = simulationContext.startTime,
-            endTime = simulationContext.endTime
+                 messageSize = simulationContext.size,
+                 systemPacketsCount = event.systemPackets,
+                 infoPacketsCount = event.infoPackets,
+                 packageInformationSize = simulationContext.infoPacketSize,
+                 systemTraffic = event.systemBytes,
+                 informationTraffic = event.infoBytes,
+                 errorCount = event.errorCount,
+                 mode = simulationContext.mode,
+                 startTime = simulationContext.startTime,
+                 endTime = simulationContext.endTime
          )
       }
    }
 
    private suspend fun onMessageChanged(event: SimulationResultModel) {
       when (event) {
-         is SimulationResultModel.TextSimulationModel -> {}
+         is SimulationResultModel.TextSimulationModel -> {
+         }
          is SimulationResultModel.MessageStartModel -> createNewMessage(event)
          is SimulationResultModel.MessageMoveModel -> moveMessage(event)
-         is SimulationResultModel.ErrorMessageModel -> {}
+         is SimulationResultModel.ErrorMessageModel -> {
+         }
          is SimulationResultModel.EndSimulation -> onSimulationEnded(event)
       }
    }
 
    private suspend fun handleSendEvent(model: SimulationResultModel.MessageStartModel, useError: Boolean): Boolean {
       messageContext = MessageContext(
-         id = model.packetId,
-         toId = model.to,
-         lineId = model.by,
-         fromId = model.from
+              id = model.packetId,
+              toId = model.to,
+              lineId = model.by,
+              fromId = model.from
       )
       onMessageChanged(model)
 
@@ -347,15 +351,15 @@ class DrawerContext(
          delay(1)
          val err = isGonnaHaveTrouble and (errorTick == it)
          onMessageChanged(
-            SimulationResultModel.MessageMoveModel(
-               model.packetId,
-               if (err) PacketType.ERROR else model.packetType,
-               model.from,
-               model.to,
-               model.by,
-               lerp(fromWorkstation, toWorkstation, it / model.time.toFloat()),
-               model.time
-            )
+                 SimulationResultModel.MessageMoveModel(
+                         model.packetId,
+                         if (err) PacketType.ERROR else model.packetType,
+                         model.from,
+                         model.to,
+                         model.by,
+                         lerp(fromWorkstation, toWorkstation, it / model.time.toFloat()),
+                         model.time
+                 )
          )
          if (err) {
             delay(100)
@@ -370,19 +374,19 @@ class DrawerContext(
 
    private fun configureSimulation(): Simulation {
       return Simulation(
-         configuration = buildConfiguration {
-            path = simulationContext.simulationPathState.value!!.mapToSimulation()
-            infoPacketSize = simulationContext.infoPacketSize
-            tcpHeaderSize = simulationContext.tcpHeaderSize
-            size = simulationContext.size
-            mode = simulationContext.mode
-         },
-         models = elementsState.value.mapNotNull { it.mapToSimulation() }
+              configuration = buildConfiguration {
+                 path = simulationContext.simulationPathState.value!!.mapToSimulation()
+                 infoPacketSize = simulationContext.infoPacketSize
+                 tcpHeaderSize = simulationContext.tcpHeaderSize
+                 size = simulationContext.size
+                 mode = simulationContext.mode
+              },
+              models = elementsState.value.mapNotNull { it.mapToSimulation() }
       )
    }
 
    private suspend fun createNewMessage(event: SimulationResultModel.MessageStartModel) {
-     moveMutex.lock()
+      moveMutex.lock()
       val fromWorkstation = elementsState.value.find { it.id == event.from } ?: kotlin.run {
          moveMutex.unlock()
          return
@@ -460,38 +464,38 @@ class DrawerContext(
    private fun createNewLine(connectableElement: ConnectableElement, offset: Offset) {
       lineCreationLastTouchOffset = connectableElement.center
       addElement(
-         element = ElementLine(
-            id = elementCounter.also { elementCounter++ },
-            startEndOffset = StartEndOffset(
-               startPoint = connectableElement.center,
-               endPoint = offset
-            ),
-            weight = getRandomLineWeight(),
-            color = Color.Black,
-            state = ElementLine.State.CREATING,
-            firstStationId = connectableElement.id,
-            secondStationId = -1,
-            errorChance = 0f,
-            lineType = LineType.DUPLEX
-         )
+              element = ElementLine(
+                      id = elementCounter.also { elementCounter++ },
+                      startEndOffset = StartEndOffset(
+                              startPoint = connectableElement.center,
+                              endPoint = offset
+                      ),
+                      weight = getRandomLineWeight(),
+                      color = Color.Black,
+                      state = ElementLine.State.CREATING,
+                      firstStationId = connectableElement.id,
+                      secondStationId = -1,
+                      errorChance = 0f,
+                      lineType = LineType.DUPLEX
+              )
       )
    }
 
    private fun endLineCreation(connectableElement: ConnectableElement) {
       val creatingLineIndex =
-         elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
+              elementsState.value.indexOfFirst { it is ElementLine && it.state == ElementLine.State.CREATING }
       if (creatingLineIndex == -1) return
       val line = elementsState.value[creatingLineIndex] as ElementLine
 //      if (line.firstStationId == connectableElement.id) return
       elementsState.value = elementsState.value.toMutableList().apply {
          val newLine = line.copy(
-            state = ElementLine.State.CREATED,
-            startEndOffset = StartEndOffset(
-               startPoint = lineCreationLastTouchOffset!!,
-               endPoint = connectableElement.center
-            ),
-            secondStationId = connectableElement.id,
-            isInMovement = false
+                 state = ElementLine.State.CREATED,
+                 startEndOffset = StartEndOffset(
+                         startPoint = lineCreationLastTouchOffset!!,
+                         endPoint = connectableElement.center
+                 ),
+                 secondStationId = connectableElement.id,
+                 isInMovement = false
          )
          set(creatingLineIndex, newLine)
          (elementsState.value.find { it.id == newLine.firstStationId } as? ConnectableElement)?.lineIds?.add(newLine.id)
@@ -509,7 +513,7 @@ class DrawerContext(
       // firstly search in ImageControlElements (workstations, communicationNodes, messages)
       return elementsState.value.filterIsInstance<ConnectableElement>().find { it.isInOffset(click) }
       // then search in all elements
-         ?: elementsState.value.find { it.isInOffset(click) }
+              ?: elementsState.value.find { it.isInOffset(click) }
    }
 
    private fun onTypedOnElement(position: Offset): Element? {
@@ -545,10 +549,10 @@ class DrawerContext(
    private fun removeLine(elementLine: ElementLine) {
       // searching connectable elements that connected to this line
       (elementsState.value.find { it.id == elementLine.firstStationId } as? ConnectableElement)?.lineIds?.remove(
-         elementLine.id
+              elementLine.id
       )
       (elementsState.value.find { it.id == elementLine.secondStationId } as? ConnectableElement)?.lineIds?.remove(
-         elementLine.id
+              elementLine.id
       )
       elementsState.value = elementsState.value.toMutableList().apply { remove(elementLine) }
    }

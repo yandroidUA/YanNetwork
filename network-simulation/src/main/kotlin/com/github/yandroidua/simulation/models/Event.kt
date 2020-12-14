@@ -16,7 +16,8 @@ sealed class Event {
        val systemTraffic: Int,
        val informationTraffic: Int,
        val systemPackages: Int,
-       val infoPackages:Int
+       val infoPackages:Int,
+       val errorCount: Int
     ): Event()
 
 }

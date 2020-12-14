@@ -52,6 +52,7 @@ class BellmanFordAlgorithm(
       val analyzingDistances = if (wTo == null) distances else arrayOf(distances.find { it.workstationId == wTo.number }
          ?: return emptyList())
       for (to in analyzingDistances) {
+         if(to.weight == or ) continue
          calculateMinPath(to, from, or, distances, byLength)
       }
 
@@ -73,8 +74,8 @@ class BellmanFordAlgorithm(
       var realWeight = 0
       var tries = 0
       while (currentWorkstation != from.number) {
-         if (tries == workstations.size) return
-         tries++
+//         if (tries == workstations.size) return
+//         tries++
          for (workstation in workstations) {
             if (currentWorkstation == from.number) {
                path.add(-1 to currentWorkstation)

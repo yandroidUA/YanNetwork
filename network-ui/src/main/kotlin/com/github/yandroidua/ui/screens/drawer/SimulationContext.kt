@@ -18,7 +18,7 @@ data class SimulationContext(
     var tcpHeaderSize: Int = 20,
     var udpHeaderSize: Int = 8,
     var byLength: Boolean = true,
-    var size: Int = 4000,
+    var size: Int = 2048,
     var resultInfoSize: Int = 0,
     var resultSysSize: Int = 0,
     var mode: Mode = Mode.LOGICAL,

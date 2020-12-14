@@ -29,26 +29,26 @@ fun SettingsScreen(
    loader: @Composable (String) -> Unit
 ) = Column(modifier = modifier.padding(all = 8.dp).wrapContentSize(align = Alignment.Center)) {
    val loaderTrigger = remember { mutableStateOf(false) }
-   Row {
-      Text(text = "Файл з налаштуванням мережі:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
-      Spacer(modifier = Modifier.width(width = 5.dp))
-      EditText(
-         value = settingsState.dumpPathState.value,
-         onValueChange = { path -> settingsState.dumpPathState.value = path }
-      )
-   }
+//   Row {
+//      Text(text = "Файл з налаштуванням мережі:", modifier = Modifier.align(alignment = Alignment.CenterVertically))
+//      Spacer(modifier = Modifier.width(width = 5.dp))
+//      EditText(
+//         value = settingsState.dumpPathState.value,
+//         onValueChange = { path -> settingsState.dumpPathState.value = path }
+//      )
+//   }
    Spacer(modifier = Modifier.height(8.dp))
    Button(
       colors = DaeerTheming.buttonColors(),
       modifier = Modifier.width(width = 400.dp),
       onClick = { dumper(settingsState.dumpPathState.value) }
-   ) { Text("Записати у файл") }
+   ) { Text("Зберегти") }
    Spacer(modifier = Modifier.height(8.dp))
    Button(
       colors = DaeerTheming.buttonColors(),
       modifier = Modifier.width(width = 400.dp),
       onClick = { loaderTrigger.value = true }
-   ) { Text("Завантажити з файлу") }
+   ) { Text("Завантажити") }
    if (loaderTrigger.value) {
       loader(settingsState.dumpPathState.value)
       loaderTrigger.value = false

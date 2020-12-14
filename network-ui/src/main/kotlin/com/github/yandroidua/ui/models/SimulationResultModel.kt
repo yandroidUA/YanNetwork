@@ -31,7 +31,8 @@ sealed class SimulationResultModel {
       val systemBytes: Int,
       val infoBytes: Int,
       val systemPackets: Int,
-      val infoPackets: Int
+      val infoPackets: Int,
+      val errorCount: Int
    ) : SimulationResultModel()
 
    data class ErrorMessageModel(val reason: String) : SimulationResultModel()

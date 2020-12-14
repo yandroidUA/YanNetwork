@@ -136,7 +136,7 @@ fun CalculationWindow(
             Spacer(modifier = Modifier.height(height = 8.dp))
             Row {
                Text(
-                  text = "Розмір інформаційної частини в пакеті: ",
+                  text = "MTU : ",
                   modifier = Modifier.align(alignment = Alignment.CenterVertically)
                )
                Spacer(modifier = Modifier.width(width = 5.dp))
@@ -165,9 +165,9 @@ fun CalculationWindow(
             ) {
                ModeRadioButton(state.simulationModeState, Mode.LOGICAL)
                Spacer(modifier = Modifier.height(height = 4.dp))
-               ModeRadioButton(state.simulationModeState, Mode.DATAGRAM)
-               Spacer(modifier = Modifier.height(height = 4.dp))
                ModeRadioButton(state.simulationModeState, Mode.VIRTUAL)
+               Spacer(modifier = Modifier.height(height = 4.dp))
+               ModeRadioButton(state.simulationModeState, Mode.DATAGRAM)
             }
             Spacer(modifier = Modifier.height(height = 8.dp))
             Row {
@@ -216,7 +216,7 @@ fun CalculationWindow(
 
             },
             modifier = Modifier.fillMaxWidth()
-         ) { Text(text = "Вирахувати") }
+         ) { Text(text = "Старт") }
       }
    }
 }

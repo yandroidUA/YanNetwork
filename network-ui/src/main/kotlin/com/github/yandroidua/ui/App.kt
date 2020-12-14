@@ -32,64 +32,65 @@ import com.github.yandroidua.ui.utils.toApplicationState
 const val MAIN_WINDOW_TITLE = "Julya Tkachenko KV 72"
 const val WIDTH = 1200
 const val HEIGHT = 900
-private const val TITLE_SETTINGS = "Налаштування"
+private const val TITLE_SETTINGS = "Збереження мережі"
 private const val TITLE_PANEL = "Модифікація мережі"
 private const val TITLE_RESULTS = "Результати"
 
 //------------------------------------AppState--------------------------------------------------------------------------
 
 data class AppState(
-   var drawerContext: DrawerContext? = null,
-   var results: PathCalculationResult? = null,
-   var settingsState: SettingsState? = null
+        var drawerContext: DrawerContext? = null,
+        var results: PathCalculationResult? = null,
+        var settingsState: SettingsState? = null
 )
 
 //-----------------------------------Utils functions--------------------------------------------------------------------
 
 @Composable
 private fun createEmptyDrawerContext(): DrawerContext {
-   return DrawerContext(
-      elementsState = mutableStateOf(emptyList()),
-      selectedElementState = mutableStateOf(null),
-      messageState = mutableStateOf(null),
-      simulationContext = SimulationContext(
-         simulationStartedState = mutableStateOf(false),
-         simulationStoppedState = mutableStateOf(false),
-         simulationPathState = mutableStateOf(null)
-      )
-   )
+    return DrawerContext(
+            elementsState = mutableStateOf(emptyList()),
+            selectedElementState = mutableStateOf(null),
+            messageState = mutableStateOf(null),
+            simulationContext = SimulationContext(
+                    simulationStartedState = mutableStateOf(false),
+                    simulationStoppedState = mutableStateOf(false),
+                    simulationPathState = mutableStateOf(null)
+            )
+    )
 }
 
 @Composable
 private fun createEmptySettingsState(): SettingsState {
-   return SettingsState(dumpPathState = mutableStateOf("D:\\Projects\\test.txt"))
+    return SettingsState(dumpPathState = mutableStateOf("C:\\Users\\Daeer\\Desktop\\AAA\\test.txt"))
+
 }
 
 @Composable
 private fun loadStateFromDump(path: String, navigationState: MutableState<Pair<TabType, Any?>>) {
-   Dumper.EasyDumper().path(path).read()?.toApplicationState()?.let {
-      applicationState.drawerContext = it.drawerContext
-      applicationState.results = it.results
-   }
-   navigateTo(navigationState, navigationState.value.first, navigationState.value.second)
+    Dumper.EasyDumper().path(path).read()?.toApplicationState()?.let {
+        applicationState.drawerContext = it.drawerContext
+        applicationState.results = it.results
+    }
+    navigateTo(navigationState, navigationState.value.first, navigationState.value.second)
 }
 
 private fun navigateTo(state: MutableState<Pair<TabType, Any?>>, tabType: TabType, args: Any? = null) {
-   state.value = tabType to args
+    state.value = tabType to args
 }
 
 private fun isCurrentNavigation(state: MutableState<Pair<TabType, Any?>>, direction: TabType): Boolean {
-   return state.value.first == direction
+    return state.value.first == direction
 }
 
 private fun dumpState(path: String) {
-   applicationState.drawerContext?.let {
-      val d = Dumper.EasyDumper()
-         .path(path = path)
-         .addToDumpElements(it.elementsState.value)
+    applicationState.drawerContext?.let {
+        val d = Dumper.EasyDumper()
+                .path(path = path)
+                .addToDumpElements(it.elementsState.value)
 
-      d.dump()
-   }
+        d.dump()
+    }
 }
 
 //-----------------------------------UI---------------------------------------------------------------------------------
@@ -97,38 +98,41 @@ private fun dumpState(path: String) {
 private val applicationState = AppState()
 
 fun main() = Window(
-   title = MAIN_WINDOW_TITLE,
-   size = IntSize(WIDTH, HEIGHT)
+        title = MAIN_WINDOW_TITLE,
+        size = IntSize(WIDTH, HEIGHT)
 ) {
-   MaterialTheme {
-      val navigationState: MutableState<Pair<TabType, Any?>> = remember { mutableStateOf(TabType.SETTINGS to null) }
-      lightColors(primary = Color.Magenta, primaryVariant = Color.Magenta)
-      Row(
-         modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color.White)
-      ) {
-
-         Surface(modifier = Modifier.fillMaxHeight()) {
-            Column(
-               modifier = Modifier
-                  .width(width = 220.dp)
-                  .wrapContentHeight(align = Alignment.CenterVertically)
-                  .align(alignment = Alignment.CenterVertically)
-            ) {
-               NavigationButton(
-                  modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
-                  selected = isCurrentNavigation(navigationState, TabType.SETTINGS),
-                  onClick = { navigateTo(navigationState, TabType.SETTINGS) },
-                  text = TITLE_SETTINGS
-               )
-               Spacer(modifier = Modifier.height(height = 8.dp))
-               NavigationButton(
-                  modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
-                  selected = isCurrentNavigation(navigationState, TabType.PANEL),
-                  onClick = { navigateTo(navigationState, TabType.PANEL, applicationState.drawerContext) },
-                  text = TITLE_PANEL
-               )
+    MaterialTheme {
+        val navigationState: MutableState<Pair<TabType, Any?>> = remember { mutableStateOf(TabType.SETTINGS to null) }
+        lightColors(primary = Color.Magenta, primaryVariant = Color.Magenta)
+        Row(
+                modifier = Modifier
+                        .fillMaxSize()
+                        .background(color = Color.White)
+        ) {
+//         Row(modifier = Modifier.fillMaxHeight().weight(1f).background(Color.Red)) {}
+//         Row(modifier = Modifier.fillMaxHeight().width(width = 220.dp).background(Color.Green)) {}
+            MainNavigator(modifier = Modifier.fillMaxHeight().weight(1f), navigationState)
+            Spacer(modifier = Modifier.fillMaxHeight().width(width = 2.dp).background(Color.Black))
+            Surface(modifier = Modifier.fillMaxHeight()) {
+                Column(
+                        modifier = Modifier
+                                .width(width = 220.dp)
+                                .wrapContentHeight(align = Alignment.CenterVertically)
+                                .align(alignment = Alignment.CenterVertically)
+                ) {
+                    NavigationButton(
+                            modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                            selected = isCurrentNavigation(navigationState, TabType.SETTINGS),
+                            onClick = { navigateTo(navigationState, TabType.SETTINGS) },
+                            text = TITLE_SETTINGS
+                    )
+                    Spacer(modifier = Modifier.height(height = 8.dp))
+                    NavigationButton(
+                            modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                            selected = isCurrentNavigation(navigationState, TabType.PANEL),
+                            onClick = { navigateTo(navigationState, TabType.PANEL, applicationState.drawerContext) },
+                            text = TITLE_PANEL
+                    )
 //               Spacer(modifier = Modifier.height(height = 8.dp))
 //               NavigationButton(
 //                  modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
@@ -136,93 +140,95 @@ fun main() = Window(
 //                  onClick = { navigateTo(navigationState, TabType.RESULTS) },
 //                  text = TITLE_RESULTS
 //               )
+                }
             }
-         }
-         Spacer(modifier = Modifier.fillMaxHeight().width(width = 2.dp).background(Color.Black))
-         MainNavigator(modifier = Modifier.weight(1f), navigationState)
-      }
-   }
+
+        }
+    }
 }
 
 @Composable
 private fun NavigationButton(modifier: Modifier = Modifier, onClick: () -> Unit, selected: Boolean, text: String) {
-   Button(
-      enabled = !selected,
-      colors = DaeerTheming.buttonColors(),
-      modifier = modifier.then(
-         Modifier
-            .padding(all = 10.dp)
-            .width(200.dp)
-      ),
-      onClick = onClick
-   ) {
-      Text(text = text)
-   }
+    Button(
+            enabled = !selected,
+            colors = DaeerTheming.buttonColors(),
+            modifier = modifier.then(
+                    Modifier
+                            .padding(all = 10.dp)
+                            .width(200.dp)
+            ),
+            onClick = onClick
+    ) {
+        Text(text = text)
+    }
 }
 
 @Composable
 private fun MainNavigator(modifier: Modifier = Modifier, navigationState: MutableState<Pair<TabType, Any?>>) {
-   val arguments = navigationState.value.second
-   when (navigationState.value.first) {
-      TabType.SETTINGS -> createSettings(applicationState.settingsState, navigationState)
-      TabType.PANEL -> createPanelScreen(
-         argDrawerContext = arguments as? DrawerContext
-      ) { tabType: TabType, argument: Any? ->
-         navigateTo(navigationState, tabType, argument)
-      }
-      TabType.RESULTS -> createResults(
-         results = arguments as? PathCalculationResult,
-         elements = applicationState.drawerContext?.elementsState?.value ?: emptyList(),
-         navigationState = navigationState
-      )
-   }
+    val arguments = navigationState.value.second
+    when (navigationState.value.first) {
+        TabType.SETTINGS -> createSettings(applicationState.settingsState, navigationState, modifier)
+        TabType.PANEL -> createPanelScreen(
+                modifier = modifier,
+                argDrawerContext = arguments as? DrawerContext
+        ) { tabType: TabType, argument: Any? ->
+            navigateTo(navigationState, tabType, argument)
+        }
+        TabType.RESULTS -> createResults(
+                results = arguments as? PathCalculationResult,
+                elements = applicationState.drawerContext?.elementsState?.value ?: emptyList(),
+                navigationState = navigationState
+        )
+    }
 }
 
 @Composable
 private fun createPanelScreen(
-   argDrawerContext: DrawerContext?,
-   navigator: (TabType, Any?) -> Unit
+        modifier: Modifier = Modifier,
+        argDrawerContext: DrawerContext?,
+        navigator: (TabType, Any?) -> Unit
 ) {
-   val drawerContext = argDrawerContext ?: createEmptyDrawerContext()
-   applicationState.drawerContext = drawerContext
-   PanelScreen(
-      context = drawerContext,
-      navigator = navigator,
-      onRestart = { drawerContext.startSimulation() }
-   )
+    val drawerContext = argDrawerContext ?: createEmptyDrawerContext()
+    applicationState.drawerContext = drawerContext
+    PanelScreen(
+            modifier = modifier,
+            context = drawerContext,
+            navigator = navigator,
+            onRestart = { drawerContext.startSimulation() }
+    )
 }
 
 @Composable
 private fun createResults(
-   results: PathCalculationResult?,
-   elements: List<Element>,
-   navigationState: MutableState<Pair<TabType, Any?>>,
+        results: PathCalculationResult?,
+        elements: List<Element>,
+        navigationState: MutableState<Pair<TabType, Any?>>,
 ) {
-   val res = results ?: applicationState.results
-   applicationState.results = res
-   ResultScreen(result = res, elements = elements) { simulationPath ->
-      navigateTo(
-         state = navigationState,
-         tabType = TabType.PANEL,
-         args = applicationState.drawerContext?.apply {
-            simulationContext.simulationPathState.value = simulationPath
-         }?.also { applicationState.drawerContext = it }
-      )
-   }
+    val res = results ?: applicationState.results
+    applicationState.results = res
+    ResultScreen(result = res, elements = elements) { simulationPath ->
+        navigateTo(
+                state = navigationState,
+                tabType = TabType.PANEL,
+                args = applicationState.drawerContext?.apply {
+                    simulationContext.simulationPathState.value = simulationPath
+                }?.also { applicationState.drawerContext = it }
+        )
+    }
 }
 
 @Composable
 private fun createSettings(
-   settingsState: SettingsState?,
-   navigationState: MutableState<Pair<TabType, Any?>>,
-   modifier: Modifier = Modifier
+        settingsState: SettingsState?,
+        navigationState: MutableState<Pair<TabType, Any?>>,
+        modifier: Modifier = Modifier
 ) {
-   val state = settingsState ?: createEmptySettingsState()
-   applicationState.settingsState = state
-   SettingsScreen(
-      modifier = modifier,
-      settingsState = state,
-      dumper = { path -> dumpState(path) },
-      loader = { path -> loadStateFromDump(path, navigationState) }
-   )
+    val state = settingsState ?: createEmptySettingsState()
+    applicationState.settingsState = state
+    SettingsScreen(
+            modifier = modifier,
+            settingsState = state,
+            dumper = { path -> dumpState(path) },
+            loader = { path -> loadStateFromDump(path, navigationState) }
+    )
 }
